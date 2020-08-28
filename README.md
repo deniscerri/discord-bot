@@ -22,6 +22,15 @@ name: 'Hug',
 name: 'Roast',
     value: 'Roast the shit out of u or others. 200+ roasts'
     
+name: 'Img',
+    value: 'Shows you an image from the internet based on your input'
+    
+name: '8ball',
+    value: 'Replies to your stupid ass questions'
+    
+name: 'Define',
+    value: 'Defines your words lol'
+    
 
-There is also a command called 'commands' that lists all the commands.
+There is also a command called 'help' that lists all the commands.
 
