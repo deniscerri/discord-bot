@@ -1,14 +1,25 @@
 {
   "name": "discordbot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Denis Çerri",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.3.1"
+    "@giphy/js-fetch-api": "^1.6.1",
+    "cheerio": "^1.0.0-rc.3",
+    "discord.js": "^12.3.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "giphy-js-sdk-core": "^1.0.6",
+    "imageapi.js": "^1.0.11",
+    "node-fetch": "^2.6.0",
+    "random-puppy": "^1.1.0",
+    "request": "^2.88.2",
+    "snekfetch": "^4.0.4",
+    "urban": "^0.3.2"
   }
 }
