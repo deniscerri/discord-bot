@@ -20,7 +20,7 @@ client.once('ready', () => {
 });
 
 
-const token = 'NzQ2ODI3NTY5MzExMTIxNDc5.X0F_Xw.GF5oaa9eeovKsO_codu0zmZbyhA';
+const token = '';
 const prefix = 'w';
 
 
