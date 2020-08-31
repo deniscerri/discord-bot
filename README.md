@@ -6,14 +6,14 @@ First project of mine on discord.
 **Prefix:** W
 
 Commands:
--8ball game
--show avatar
--define words
--send random pics
--send random memes from reddit
--show ping
--send roasts
--send random topics
+-8ball game<br/>
+-show avatar<br/>
+-define words<br/>
+-send random pics<br/>
+-send random memes from reddit<br/>
+-show ping<br/>
+-send roasts<br/>
+-send random topics<br/>
 
 
 **INVITE BOT:** 
