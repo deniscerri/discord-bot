@@ -23,7 +23,6 @@ module.exports = {
         "That is the dumbest shit i heard all day",
         "Ow hell naaaaaawwawaaaaaah"
         
-        
       ];
 
 
@@ -38,13 +37,8 @@ module.exports = {
         return;
     }
 
-    // if(tts){
-    //     message.channel.send('Why are you sending tts retard', {
-    //       tts: true
-    //     });
-    // }else{
         message.channel.send(answers[Math.floor(Math.random()* answers.length)]);
-    // 
+    
 
 	},
 };

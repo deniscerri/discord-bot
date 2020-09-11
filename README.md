@@ -3,20 +3,25 @@ A Discord bot with fun commands
 
 First project of mine on discord.
 
-**Prefix:** W
+Prefix: W
 
 Commands:
--8ball game<br/>
--show avatar<br/>
--define words<br/>
--send random pics<br/>
--send random memes from reddit<br/>
--show ping<br/>
--send roasts<br/>
--send random topics<br/>
 
+name: 'Ping',
+    value: 'If u write this, the bot answers you pong lol'
+    
+name: 'Topic',
+    value: 'Bot gives u a topic to talk about. 1000+ topics'
+    
+name: 'Avatar',
+    value: 'Shows your avatar or others'
+    
+name: 'Hug',
+    value: 'Send hug gifs xD'
+    
+name: 'Roast',
+    value: 'Roast the shit out of u or others. 200+ roasts'
+    
 
-**INVITE BOT:** 
-[Click here](https://discord.com/api/oauth2/authorize?client_id=746827569311121479&permissions=0&scope=bot)
-
+There is also a command called 'commands' that lists all the commands.
 

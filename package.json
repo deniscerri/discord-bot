@@ -1,6 +1,6 @@
 {
   "name": "discordbot",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "@giphy/js-fetch-api": "^1.6.1",
     "cheerio": "^1.0.0-rc.3",
     "discord.js": "^12.3.1",
+    "discord.js-aliases": "^1.1.6",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "giphy-js-sdk-core": "^1.0.6",

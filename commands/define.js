@@ -3,21 +3,33 @@ const urban = module.require("urban");
 
 module.exports = {
 	name: 'define',
+  aliases: ['def'],
 	description: 'Gives definition of said word!',
 	execute(message, args) {
       var question = args.slice(0).join(" ");
-      console.log(question);
     
       if(question === ''){
-        message.channel.send("Where the word at smh!");
+          message.channel.send("Give me a word retard!");
           return;
       }
 
+      if(question === '.'){
+          urban.random().first(function(json) {
+            message.channel.send(`**${json.word}**\n`+ json.definition);
+            return;
+          });
+
+      }
+
       urban(question).first(json =>{
-        if(!json){
+        
+        try{
+          message.channel.send(json.definition);
+        }catch(err){
           message.channel.send("No results found");
         }
-        message.channel.send(json.definition);
+        
+        return;
       });
 	},
 };

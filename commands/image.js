@@ -1,21 +1,28 @@
 var cheerio = require("cheerio"); 
 var request = require("request"); 
 const api = require('imageapi.js');
-
+var Discord = require('discord.js');
 
 module.exports = {
   name: 'img',
 	description: 'Get random images from the net!',
 	execute(message, args) {
+      
 		
       // extract search query from message
 
       var search = args.slice(0).join(" "); 
 
+      if(search.endsWith(" 1")){
+        search = search.substring(0,search.length-2);
+      }
+
       if(search === ""){
         message.channel.send("What pic do u want me to search smh!");
         return;
       }
+
+      
 
       var options = {
           url: "https://results.dogpile.com/serp?qc=images&q=" + search,
@@ -50,20 +57,36 @@ module.exports = {
               // Return a random image
               var imageIndexToReturn = Math.floor(Math.random() * urls.length)
 
+
         // Send result
-              message.channel.send( urls[imageIndexToReturn] );
+
+              if(search.endsWith(" 1")){
+                imageIndexToReturn = Math.floor(Math.random() * 5);
+              }
+
+              var output = message.channel.send( urls[imageIndexToReturn]);
+
+
+
+
+
+              urls.splice(0, urls.length);
+
+
+              
               
       });
 
-
-
-
-
+  return;
 
 
 
 	},
 };
+
+
+
+
 
 
 
