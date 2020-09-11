@@ -1,9 +1,11 @@
 const  fs = require('fs');
 const Discord = require('discord.js');
 const keepAlive = require('./server.js');
+
 const {Client, MessageAttachment} = require('discord.js');
 const client = new Client();
 client.commands = new Discord.Collection();
+
 
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
@@ -15,25 +17,30 @@ for (const file of commandFiles) {
 }
 
 
+
 client.once('ready', () => {
     console.log('DenisBot is online!');
 });
 
-
-const token = '';
 const prefix = 'w';
 
 
 client.on('message', message => {
-	if (!message.content.startsWith(prefix) || message.author.bot) return;
+
+
+	if (!(message.content.toLowerCase()).startsWith(prefix) || message.author.bot) return;
 
 	const args = message.content.slice(prefix.length).trim().split(/ +/);
-	const command = args.shift().toLowerCase();
+	
+  const commandName = args.shift().toLowerCase();
 
-	if (!client.commands.has(command)) return;
+	const command = client.commands.get(commandName)
+		|| client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+
+	if (!command) return;
 
 	try {
-		client.commands.get(command).execute(message, args);
+		command.execute(message, args);
 	} catch (error) {
 		console.error(error);
 		message.reply('there was an error trying to execute that command!');
@@ -41,5 +48,10 @@ client.on('message', message => {
 });
 
 
+
+
+
+
 keepAlive();
-client.login(token);
+client.login(process.env.TOKEN);
+
