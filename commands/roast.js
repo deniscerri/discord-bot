@@ -10,7 +10,7 @@ module.exports = {
     var roast = roastText.split("\n");
 
 
-		if(!(args === undefined)){
+		if(!(args[0] === undefined)){
                     message.channel.send(args + ' '+ roast[Math.floor(Math.random() * roast.length)]); 
                 }else{
                     message.channel.send(roast[Math.floor(Math.random() * roast.length)]);       
