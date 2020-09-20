@@ -35,6 +35,7 @@ async function meme(message){
             .then(json => {
                 let embed = new Discord.MessageEmbed()
                     .setTitle(json.title)
+                    .setURL(json.url)
                     .setImage(json.url)
                     .setFooter(`Subreddit: r/ ${json.subreddit}`)
                 message.channel.send(embed)
