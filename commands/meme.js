@@ -33,11 +33,12 @@ async function meme(message){
         fetch(`https://meme-api.herokuapp.com/gimme/${subreddit}`)
             .then(res => res.json())
             .then(json => {
-                console.log(json);
+                
                 let embed = new Discord.MessageEmbed()
-                    .setAuthor(json.title, '', json.url)
+                    .setTitle(json.title)
+                    .setURL(json.postLink)
                     .setImage(json.url)
-                    .setFooter(`Subreddit: r/ ${json.subreddit}`)
+                    .setFooter(`👍 ${json.ups} Author: ${json.author}    Subreddit: r/ ${json.subreddit}`)
                 message.channel.send(embed)
             });
 }
