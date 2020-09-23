@@ -33,6 +33,7 @@ async function meme(message){
         fetch(`https://meme-api.herokuapp.com/gimme/${subreddit}`)
             .then(res => res.json())
             .then(json => {
+                console.log(json);
                 let embed = new Discord.MessageEmbed()
                     .setAuthor(json.title, '', json.url)
                     .setImage(json.url)
