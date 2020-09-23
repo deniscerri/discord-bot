@@ -38,7 +38,7 @@ async function meme(message){
                     .setTitle(json.title)
                     .setURL(json.postLink)
                     .setImage(json.url)
-                    .setFooter(`👍 ${json.ups} Author: ${json.author}    Subreddit: r/ ${json.subreddit}`)
+                    .setFooter(`👍 ${json.ups} | Subreddit: r/ ${json.subreddit}`)
                 message.channel.send(embed)
             });
 }
