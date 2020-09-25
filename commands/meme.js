@@ -40,7 +40,7 @@ module.exports = {
 
 
 function postMeme(message, subreddit){
-    fetch(`https://www.reddit.com/r/${subreddit}.json?sort=top&t=week`)
+    fetch(`https://www.reddit.com/r/${subreddit}.json?sort=hot&limit=100`)
     .then(res => res.json())
     .then(json => {
 
@@ -48,9 +48,18 @@ function postMeme(message, subreddit){
         if(json.data.dist == 0){
             message.channel.send("Couldn't find subreddit.");
         }else{
+
+
             var random = Math.floor(Math.random() * (json.data.children).length);
 
-            console.log((json.data.children)[random]);
+            if((json.data.children)[0].data.over_18){
+                if(!message.channel.nsfw){
+                    message.channel.send("This subreddit is NSFW. Send the command in a NSFW Channel!");
+                    return;
+                }
+            }
+
+
             
             let embed = new Discord.MessageEmbed()
                 .setTitle((json.data.children)[random].data.title)
@@ -63,3 +72,4 @@ function postMeme(message, subreddit){
        
     });
 }
+
