@@ -1,17 +1,20 @@
-A Discord bot with fun commands
+# A Discord bot with fun commands
 
-First project of mine on discord.
+**First project of mine on discord.**
 
-Prefix: W
+Prefix: **W**
+---
 
-Commands: -8ball game  
--show avatar  
--define words  
--send random pics  
--send random memes from reddit  
--show ping  
--send roasts  
--send random topics  
+# Commands:
+- 8ball game  
+- show avatar  
+- define words  
+- send random pics  
+- send random memes from reddit  
+- show ping  
+- send roasts  
+- send random topics  
 
-INVITE BOT: [Click Here](https://discord.com/api/oauth2/authorize?client_id=746827569311121479&permissions=0&scope=bot)
+# INVITE BOT:
+[Click Here](https://discord.com/api/oauth2/authorize?client_id=746827569311121479&permissions=0&scope=bot)
 
