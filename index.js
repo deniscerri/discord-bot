@@ -53,4 +53,4 @@ client.on('message', message => {
 
 
 keepAlive();
-client.login(process.env.token);
+client.login('NzQ2ODI3NTY5MzExMTIxNDc5.X0F_Xw.Ib7PVyXUH9VKDVpgTEgRF8m66YI');
