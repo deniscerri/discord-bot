@@ -29,7 +29,7 @@ module.exports = {
 		 .then(res => res.json())
 		 .then((json) => {
 		    try{
-           		var msg = message.channel.send(json.list[0].definition);
+           		message.channel.send(json.list[0].definition);
         	    }catch(err){
             		message.channel.send('No definition found. :(');
         	    }
