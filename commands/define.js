@@ -13,7 +13,6 @@ module.exports = {
 		
 	      //Random Definition
 	      if(question === ''){
-		 message.channel.send("Give me a word retard!");
 		 let url = `http://api.urbandictionary.com/v0/random`;
 		 fetch(url, settings)
 		 .then(res => res.json())
