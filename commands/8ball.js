@@ -21,8 +21,11 @@ module.exports = {
         "Absolutely fucking not",
         "no???",
         "That is the dumbest shit i heard all day",
-        "Ow hell naaaaaawwawaaaaaah"
-        
+        "Ow hell naaaaaawwawaaaaaah",
+    	"ok, whatever yes",
+	"when you grow a braincell, yes",
+        "ask again when I'm less busy with your mom",
+        "sure, i literally couldn't care less"
       ];
 
 
