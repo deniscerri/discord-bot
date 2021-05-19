@@ -24,8 +24,8 @@ module.exports = {
 		return;
 	      }
 		
-		if(searchQuery.endsWith(" 1")){
-		  searchQuery = searchQuery.substring(0,searchQuery.length-2);
+		if(search.endsWith(" 1")){
+		  search = search.substring(0,search.length-2);
 		  nr = 1;
 		}
 		
