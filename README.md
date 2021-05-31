@@ -1,6 +1,6 @@
-# A Discord bot with fun commands
 
-**First project of mine on discord.**
+
+**My first project on discord.**
 
 Prefix: **W**
 ---
