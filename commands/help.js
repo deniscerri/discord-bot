@@ -18,6 +18,7 @@ module.exports = {
                         {name: '8ball', value: 'Replies to your stupid ass questions'},
                         {name: 'Define', value: 'Defines your words lol. Use . for random definition'},
                         {name: 'Meme', value: 'Send memes from Reddit'},
+                        {name: 'Movie', value: 'Search for movies from Imdb and watch them'},
                     )
                     .setImage('https://media1.giphy.com/media/Te4NwB59ZFn68/200.gif')
                     
