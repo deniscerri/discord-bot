@@ -32,9 +32,6 @@ module.exports = {
 
         url = `http://www.omdbapi.com/?i=${movies[i].id}&apikey=53ff7995`
         var json = await fetchAdditionalData(url);
-        if(json.Poster == 'N/A'){
-            json.Poster = '';
-        }
 
         var msg = message.channel.send(embed(json))
         .then(async function(msg){
@@ -96,6 +93,9 @@ async function fetchAdditionalData(url){
     let settings = { method: "Get" };
     var response = await fetch(url, settings)
     let json = await response.json();
+    if(json.Poster == 'N/A'){
+      json.Poster = '';
+    }
     return json;
 }
 
