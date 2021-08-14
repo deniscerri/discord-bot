@@ -4,63 +4,83 @@ const Discord = require("discord.js");
 module.exports = {
     name: 'movie',
     aliases: ['mov'],
-    description: 'Find Streaming links for movies',
+    description: 'Find Streaming links for movies and tv shows',
     async execute(message, args){
         var query = '';
-        
-        for(i = 0; i < args.length; i++){
+        var season = '';
+        var episode = '';
+        var type = 'feature';
+
+        query+=args[0];
+        for(var i = 1; i < args.length-1; i++){
             query+=args[i]+' ';
             
         }
+
+        var el = args[args.length-1];
+        if((el.startsWith('s') || el.startsWith('S')) && el.length < 7){
+            type = 'TV series';
+            for(var i = 1; i < el.length; i++){
+                if(el.charAt(i).startsWith('e') || el.charAt(i).startsWith('E')){
+                    for(var j = i+1; j < el.length; j++){
+                        episode+= el.charAt(j);
+                    }
+                    break;
+                }else{
+                    season += el.charAt(i);
+                }
+            }
+
+        }
         var url = `https://sg.media-imdb.com/suggests/${query.substring(0,1)}/${query}.json`
-        var movies = await fetchData(url,query);
+        var media = await fetchData(url,query);
         try{
-            movies = (movies.d).filter(function (e){
-                return e.id.startsWith('tt');
+            media = (media.d).filter(function (e){
+                return e.id.startsWith('tt') && e.q == type;
             })
         }catch(error){
-            message.channel.send("No movies were found. :(");
+            message.channel.send("No media was found. :(");
             return;
         }
 
-        if(movies.length == 0){
-            message.channel.send("No movies were found. :(");
+        if(media.length == 0){
+            message.channel.send("No media was found. :(");
             return;
         }
 
         var i = 0;
 
-        url = `http://www.omdbapi.com/?i=${movies[i].id}&apikey=53ff7995`
+        url = `http://www.omdbapi.com/?i=${media[i].id}&apikey=53ff7995`
         var json = await fetchAdditionalData(url);
         if(json.Poster == 'N/A'){
             json.Poster = '';
         }
 
-        var msg = message.channel.send(embed(json))
+        var msg = message.channel.send(embed(json, type, season, episode))
         .then(async function(msg){
-            if(movies.length > 1){
+            if(media.length > 1){
                 msg.react('⏭')
                 msg.react('🔀');
                 await msg.awaitReactions(async reaction => {
                     if(reaction.emoji.reaction.count > 1){
                         switch(reaction.emoji.name){
                         case '⏭':
-                            i = ++i % movies.length;
+                            i = ++i % media.length;
                             break;
                         case '⏮':
-                            i = --i % movies.length;
+                            i = --i % media.length;
                             break;
                         case '🔀':
-                            i = Math.floor(Math.random() * movies.length);
+                            i = Math.floor(Math.random() * media.length);
                             break;
                         }
                         
-                        url = `http://www.omdbapi.com/?i=${movies[i].id}&apikey=53ff7995`
+                        url = `http://www.omdbapi.com/?i=${media[i].id}&apikey=53ff7995`
                         json = await fetchAdditionalData(url);
-                        msg.edit(embed(json));
+                        msg.edit(embed(json, type, season, episode));
 
                         msg.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                        if(i == movies.length){
+                        if(i == media.length){
                         msg.react('⏮')
                         }else if(i == 0){
                         msg.react('⏭')
@@ -99,7 +119,8 @@ async function fetchAdditionalData(url){
     return json;
 }
 
-function embed(json){
+function embed(json, type, season, episode){
+    
     var embed = new Discord.MessageEmbed()
         .setTitle(json.Title)
         .setImage(json.Poster)
@@ -111,8 +132,13 @@ function embed(json){
             {name:'Genre', value: json.Genre, inline: true},
         )
         .setDescription(json.Plot)
-        .addField('Watch Here:', `https://fsapi.xyz/movie/${json.imdbID}`, true)
         .setFooter('IMDB Score:  '+json.imdbRating);
+
+    if(type == 'TV series'){
+        embed.addField('Watch Here:', `https://fsapi.xyz/tv-imdb/${json.imdbID}-${season}-${episode}`, true);
+    }else{
+        embed.addField('Watch Here:', `https://fsapi.xyz/movie/${json.imdbID}`, true);
+    }
 
     return embed;
 }
