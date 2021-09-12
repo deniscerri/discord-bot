@@ -1,1 +1,1 @@
-npm install puppeteer --save && node index.js
+npm install puppeteer --save && npm audit fix && node index.js

@@ -23,7 +23,7 @@ const minimal_args = [
 //   '--disable-print-preview',
 //   '--disable-prompt-on-repost',
 //   '--disable-renderer-backgrounding',
-//   '--disable-setuid-sandbox',
+     '--disable-setuid-sandbox',
 //   '--disable-speech-api',
 //   '--disable-sync',
 //   '--hide-scrollbars',
