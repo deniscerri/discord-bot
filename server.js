@@ -1,5 +1,6 @@
 const express = require('express');
 const server = express();
+require('dotenv').config();
 
 server.all('/', (req, res)=>{
     res.send('Your bot is alive!')

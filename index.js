@@ -1,4 +1,4 @@
-const  fs = require('fs');
+const fs = require('fs');
 const Discord = require('discord.js');
 const keepAlive = require('./server.js');
 
@@ -53,4 +53,4 @@ client.on('message', message => {
 
 
 keepAlive();
-client.login(process.env.TOKEN);
+client.login(process.env['TOKEN']);

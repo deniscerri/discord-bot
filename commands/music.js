@@ -140,12 +140,18 @@ const disconnect = async (message, server_queue) => {
 const list_queue = async (message, server_queue) =>{
     var embeds = [];
     if(!server_queue) return message.channel.send('There are no songs in the queue!')
-    embeds = build_queue(server_queue, embeds, message , 0);
 
+    var limit = 10;
+    for(var i = 0; i < server_queue.songs.length-1; i+=limit){
+        let tmp_embed = build_queue(server_queue, message , i, limit);
+        embeds.push(tmp_embed);
+    }
+    
+    
     let plural = (server_queue.songs.length == 1) ? 'song' : 'songs';
     if(embeds.length > 1){
         embeds.forEach((e, i) => {
-            e.setFooter(`\n\n **${server_queue.songs.length} ${plural} in queue**\nPage ${i} out of ${embeds.length}`);
+            e.setFooter(`\n\n ${server_queue.songs.length-1} ${plural} in queue\nPage ${i+1} out of ${embeds.length}`);
         });
     }
 
@@ -158,15 +164,15 @@ const list_queue = async (message, server_queue) =>{
                 if(reaction.emoji.reaction.count > 1){
                     switch(reaction.emoji.name){
                         case '⏭':
-                        i = ++i % results.length;
+                        i = ++i % embeds.length;
                         break;
                         case '⏮':
-                        i = --i % results.length;
+                        i = --i % embeds.length;
                         break;
                     }
                     msg.edit(embeds[i]);
                     msg.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                    if(i == results.length){
+                    if(i == embeds.length){
                         msg.react('⏮')
                     }else if(i == 0){
                         msg.react('⏭')
@@ -181,30 +187,31 @@ const list_queue = async (message, server_queue) =>{
         })
 }
 
-const build_queue = (print_queue, embeds, message, index) =>{
+const build_queue = (server_queue, message, index, limit) =>{
     var embed = new Discord.MessageEmbed()
         .setAuthor('DenisBOT', 'https://cdn50.picsart.com/168503106000202.png', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
         .setTitle(`${message.guild.name}'s Music Queue!`)
         .setColor('#FFFF00')
     index++;
 
-    let description = `**NOW PLAYING**\n${print_queue.songs[0].title}\n\n`;
+    let description = `**NOW PLAYING**\n${server_queue.songs[0].title}\n\n`;
+    
+    tmp_limit = (index + limit) - server_queue.songs.length;
+    if(tmp_limit >= 0) {
+        limit = server_queue.songs.length
+    }else{
+        limit = index+limit;
+    }
+    
 
-    var limit = (print_queue.songs.length > 25) ? 25 : print_queue.songs.length;
     if(limit > 1){
         description += ':arrow_down: Up Next: :arrow_down: \n\n';
     }
-
-    for(var i = 1; i < limit;i++){
-        description += '`'+`${i}.`+'`' + ` ${print_queue.songs[i].title}\n`;
-        index++;
+   
+    for(var i = index; i < limit;i++){
+        description += '`'+`${i}.`+'`' + ` ${server_queue.songs[i].title}\n`;
     }
     embed.setDescription(description);
 
-    embeds.push(embed);
-    if(index < print_queue.songs.length){
-        build_queue(print_queue, embeds, message, index);
-    }else{
-        return embeds;
-    }
+    return embed;
 }
