@@ -1,6 +1,7 @@
 const ytdl = require('ytdl-core');
 const ytsc = require('yt-search');
 const Discord = require("discord.js");
+const lyricsParse = require('lyrics-parse');
 
 //will keep guild id, and queue constructor {voice channel, text channel, connection, song list}
 const queue = new Map();
@@ -8,7 +9,7 @@ const queue = new Map();
 
 module.exports = {
 	name: 'play',
-    aliases: ['p','skip','pause','resume','disconnect','np','queue'],
+    aliases: ['p','skip','pause','resume','disconnect','np','queue', 'lyrics'],
 	description: 'Plays music from youtube',
 	async execute(message, args) {
         const voice_ch = message.member.voice.channel;
@@ -30,6 +31,7 @@ module.exports = {
             }
         }
         else if(cmd === 'queue') list_queue(message, server_queue);
+        else if(cmd === 'lyrics') print_lyrics(message, server_queue);
 
 
         
@@ -39,9 +41,9 @@ module.exports = {
 const play = async (message, args, server_queue, voice_ch) =>{
     if(!args.length) return message.channel.send('You need to write a song name or link first');
             let song = {};
-
             //if its a single youtube url
             if(ytdl.validateURL(args[0])){
+                message.channel.send('🧐 Searching for: `'+args[0]+'`...');
                 const song_info = await ytdl.getInfo(args[0]);
                 song = {title: song_info.videoDetails.title, url: song_info.videoDetails.video_url}
             
@@ -49,6 +51,7 @@ const play = async (message, args, server_queue, voice_ch) =>{
             // if its a search query
             }else{
                 const finder = async (query) => {
+                    message.channel.send('🧐 Searching for: `'+args.join(' ')+'`...');
                     const videoResult = await ytsc(query);
                     return (videoResult.videos.length > 1) ? videoResult.videos[0] : null
                 }
@@ -58,6 +61,7 @@ const play = async (message, args, server_queue, voice_ch) =>{
                     song = {title: video.title, url: video.url};
                 }else{
                     message.channel.send("Error finding video. ");
+                    return;
                 }
             }
 
@@ -83,7 +87,7 @@ const play = async (message, args, server_queue, voice_ch) =>{
                 }
             }else{
                 server_queue.songs.push(song);
-                return message.channel.send(`**${song.title}** added to the queue!`)
+                return message.channel.send('`'+song.title+'` added to the queue!')
             }
     
 }
@@ -104,7 +108,7 @@ const video_player = async (guild, song) => {
          video_player(guild, song_queue.songs[0]);
      });
 
-     await song_queue.text_channel.send(`🎶 Now Playing **${song.title}**`);
+     await song_queue.text_channel.send('🎶 Now Playing `'+song.title+'`');
 }
 
 const pause_song = async(message, server_queue) => {
@@ -142,7 +146,7 @@ const list_queue = async (message, server_queue) =>{
     if(!server_queue) return message.channel.send('There are no songs in the queue!')
 
     var limit = 10;
-    for(var i = 0; i < server_queue.songs.length-1; i+=limit){
+    for(var i = 0; i < server_queue.songs.length; i+=limit){
         let tmp_embed = build_queue(server_queue, message , i, limit);
         embeds.push(tmp_embed);
     }
@@ -209,9 +213,79 @@ const build_queue = (server_queue, message, index, limit) =>{
     }
    
     for(var i = index; i < limit;i++){
-        description += '`'+`${i}.`+'`' + ` ${server_queue.songs[i].title}\n`;
+        description += '`'+i+'.`' + ` ${server_queue.songs[i].title}\n`;
     }
     embed.setDescription(description);
 
     return embed;
 }
+
+ const print_lyrics = async (message, server_queue) => {
+     if(!server_queue){ message.channel.send('There are no songs playing!'); return;}
+     
+     const author = '';
+     // remove words inside ()
+     var title = server_queue.songs[0].title.replace(/ \([\s\S]*?\)/g, '');
+     // remove words inside []
+     title = title.replace(/ \[[\s\S]*?\]/g, '');
+    
+     let lyrics = await lyricsParse(title, author);
+
+     if(!lyrics) message.channel.send('No lyrics found! :(')
+     else{
+        let lyrics_arr = [];
+        while(lyrics.length > 6000){
+            lyrics_arr.push(lyrics.substring(0, 4000));
+            lyrics = lyrics.substring(4000);
+        }
+        lyrics_arr.push(lyrics);
+
+
+        var i = 0;
+        var embed = build_lyrics_embed(server_queue, lyrics_arr, 0);
+        
+        var msg = message.channel.send(embed)
+        .then(async function(msg){
+            if(lyrics_arr.length > 1){
+                msg.react('⏭')
+                await msg.awaitReactions(reaction => {
+                if(reaction.emoji.reaction.count > 1){
+                    switch(reaction.emoji.name){
+                        case '⏭':
+                        i = ++i % lyrics_arr.length;
+                        break;
+                        case '⏮':
+                        i = --i % lyrics_arr.length;
+                        break;
+                    }
+
+                    msg.edit(build_lyrics_embed(server_queue, lyrics_arr, i));
+                    msg.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
+                    if(i == lyrics_arr.length){
+                        msg.react('⏮')
+                    }else if(i == 0){
+                        msg.react('⏭')
+                    }else{
+                        msg.react('⏮')
+                        msg.react('⏭')
+                    }
+                }
+                
+                }, {time: 600000});
+            }
+        })
+
+     }
+     
+ }
+
+
+ const build_lyrics_embed = (server_queue, lyrics_arr, i) => {
+    var embed = new Discord.MessageEmbed()
+    .setAuthor('DenisBOT', 'https://cdn50.picsart.com/168503106000202.png', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    .setTitle(`${server_queue.songs[0].title}'s Lyrics!`)
+    .setColor('#FFFF00')
+    .setDescription(lyrics_arr[i])
+
+    return embed;
+ }

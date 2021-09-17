@@ -15,9 +15,12 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "fs": "^0.0.1-security",
+    "genius-lyrics": "^4.2.9",
     "images-scraper": "^6.3.0",
+    "lyrics-parse": "^1.1.1",
     "node-fetch": "^2.6.1",
     "puppeteer": "^9.1.1",
+    "song-lyrics-api": "^1.1.0",
     "yt-search": "^2.10.1",
     "ytdl-core": "^4.9.1"
   }
