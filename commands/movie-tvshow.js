@@ -61,7 +61,7 @@ module.exports = {
         
         var media = await fetchData(query);
 
-        if(media.length == 0 || media.results == 0){
+        if(media.length == 0 || media.results == undefined){
             message.channel.send("No media was found. :(");
             return;
         }
@@ -130,7 +130,13 @@ async function fetchData(url){
 
 function embed(media, type, season, episode){
     let posterPath = `https://www.themoviedb.org/t/p/w600_and_h900_bestv2${media.poster_path}`;
-
+    let genres;
+    if(media.genres.length == 0) genres = 'Unknown'
+    else genres = ''
+    media.genres.forEach(genre => {
+        genres+= genre.name +' ';
+    })
+    
     var embed = new Discord.MessageEmbed()
         .setTitle(media.original_title || media.name)
         .setImage(posterPath)
@@ -138,7 +144,7 @@ function embed(media, type, season, episode){
             {name:'Rating', value: media.vote_average, inline: true},
             {name:'Released', value: media.release_date || media.first_air_date, inline: true},
             {name:'Runtime', value: media.runtime || media.episode_run_time, inline: true},
-            {name:'Genre', value: media.genres[0].name, inline: true},
+            {name:'Genre', value: genres, inline: true},
         )
         .setDescription(media.overview)
 
