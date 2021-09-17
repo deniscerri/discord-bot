@@ -5,11 +5,12 @@ const lyricsParse = require('lyrics-parse');
 
 //will keep guild id, and queue constructor {voice channel, text channel, connection, song list}
 const queue = new Map();
+let repeat_song = false;
 
 
 module.exports = {
 	name: 'play',
-    aliases: ['p','skip','pause','resume','disconnect','np','queue', 'lyrics'],
+    aliases: ['p','skip','pause','resume','disconnect','np','queue', 'lyrics','repeat','restart'],
 	description: 'Plays music from youtube',
 	async execute(message, args) {
         const voice_ch = message.member.voice.channel;
@@ -32,6 +33,22 @@ module.exports = {
         }
         else if(cmd === 'queue') list_queue(message, server_queue);
         else if(cmd === 'lyrics') print_lyrics(message, server_queue);
+        else if(cmd === 'repeat'){
+            if(!server_queue) {message.channel.send('No song is playing! Song Repeat stays OFF!'); return;}
+            if(repeat_song){
+                message.channel.send('🎶 Song Repeat Turned OFF!')
+            }else{
+                message.channel.send('🎶 Song Repeat Turned ON!')
+            }
+            repeat_song = !repeat_song;
+        }
+        else if(cmd === 'restart'){
+            if(server_queue){
+                video_player(message.guild, server_queue.songs[0]);
+            }else{
+                message.channel.send('No song is playing!');
+            }
+        }
 
 
         
@@ -104,7 +121,9 @@ const video_player = async (guild, song) => {
      const stream = ytdl(song.url, { filter: 'audioonly'});
      song_queue.connection.play(stream, {seek: 0, volume: 1})
      .on('finish', () =>{
-         song_queue.songs.shift();
+         if(!repeat_song){
+            song_queue.songs.shift();
+         }
          video_player(guild, song_queue.songs[0]);
      });
 
@@ -198,7 +217,8 @@ const build_queue = (server_queue, message, index, limit) =>{
         .setColor('#FFFF00')
     index++;
 
-    let description = `**NOW PLAYING**\n${server_queue.songs[0].title}\n\n`;
+    let description = `**NOW PLAYING**\n${server_queue.songs[0].title}`;
+    if(repeat_song){description+=' 🔂'}
     
     tmp_limit = (index + limit) - server_queue.songs.length;
     if(tmp_limit >= 0) {
@@ -209,7 +229,7 @@ const build_queue = (server_queue, message, index, limit) =>{
     
 
     if(limit > 1){
-        description += ':arrow_down: Up Next: :arrow_down: \n\n';
+        description += '\n\n :arrow_down: Up Next: :arrow_down: \n\n';
     }
    
     for(var i = index; i < limit;i++){
