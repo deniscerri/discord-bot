@@ -12,7 +12,7 @@ module.exports = {
         const queue = index.queue;
 
         if(!voice_ch){ return message.channel.send('You need to be in a audio channel to execute this command!');}
-        const server_queue = queue.get(message.guild.id);
+        let server_queue = queue.get(message.guild.id);
 
 
         const finder = async (query) => {
@@ -34,23 +34,33 @@ module.exports = {
 
             embed.setDescription(desc);
             let filter = m => m.author.id === message.author.id
-            let msg = message.channel.send(embed).then(()=>{
-                message.channel.awaitMessages(filter, {
-                    max: 1,
-                    time: 30000
-                })
-                .then(message => {
-                    message = message.first();
-                    if(Number.isInteger(parseInt(message.content))){
-                        let query = parseInt(message.content);
-                        query--;
-                        if(query < limit){
-                            let song = {title: videos[query].title, url: videos[query].url};
-                            player.add_to_queue(message, queue, server_queue, song, voice_ch);
+            
+            message.channel.send(embed).then(()=>{
+                msg();
+                function msg (){
+                    message.channel.awaitMessages(filter, {
+                        max: 1,
+                        time: 30000
+                    })
+                    .then(message => {
+                        message = message.first();
+                        
+                        if(Number.isInteger(parseInt(message.content))){
+                            let query = parseInt(message.content);
+                            query--;
+                            if(query < limit){
+                                let song = {title: videos[query].title, url: videos[query].url};
+                                player.add_to_queue(message, queue, server_queue, song, voice_ch);
+                                server_queue = queue.get(message.guild.id);
+                                msg();
+                            }else{
+                                message.channel.send('There are only '+(limit-1)+' search results!');
+                            }
                         }
-                    }
-                })
+                    })
+                }
             })
+            
         }else{
             message.channel.send("Error finding video. ");
             return;

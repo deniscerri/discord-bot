@@ -68,9 +68,12 @@ const build_queue = (server_queue, message, index, limit) =>{
     index++;
 
     let description = `**NOW PLAYING**\n${server_queue.songs[0].title}`;
-    if(server_queue.connection.dispatcher.pausedSince != null && server_queue.connection.dispatcher.pausedSince > 0){
-        description+=' ⏸';
+    if(server_queue.connection.dispatcher != null){
+        if(server_queue.connection.dispatcher.pausedSince != null && server_queue.connection.dispatcher.pausedSince > 0){
+            description+=' ⏸';
+        }
     }
+    
     if(server_queue.repeat){description+=' 🔂'}
     
     tmp_limit = (index + limit) - server_queue.songs.length;

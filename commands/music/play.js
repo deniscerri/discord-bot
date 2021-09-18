@@ -70,7 +70,7 @@ async function add_to_queue(message, queue, server_queue, song, voice_ch){
         try{
             const connection  = await voice_ch.join();
             queue_constructor.connection = connection;
-            video_player(queue,message.guild, queue_constructor.songs[0])
+            video_player(message,queue,message.guild, queue_constructor.songs[0])
         }catch(err){
             queue.delete(message.guild.id);
             message.channel.send('There was an error connecting! ');
@@ -81,7 +81,7 @@ async function add_to_queue(message, queue, server_queue, song, voice_ch){
     }
 }
 
-async function video_player(queue, guild, song){
+async function video_player(message, queue, guild, song){
     if(queue == undefined) {return;}
     const song_queue = queue.get(guild.id);
 
@@ -96,13 +96,13 @@ async function video_player(queue, guild, song){
         message.channel.send('Error playing stream!');
         song_queue.songs.shift();
         song_queue.repeat = false;
-        video_player(queue, guild, song_queue.songs[0]);
+        video_player(message, queue, guild, song_queue.songs[0]);
     })
     .on('finish', () =>{
         if(!song_queue.repeat){
            song_queue.songs.shift();
         }
-        video_player(queue, guild, song_queue.songs[0]);
+        video_player(message, queue, guild, song_queue.songs[0]);
     });
 
     await song_queue.text_channel.send('🎶 Now Playing `'+song.title+'`');

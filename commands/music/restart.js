@@ -12,7 +12,7 @@ module.exports = {
         const server_queue = queue.get(message.guild.id);
         
         if(server_queue){
-            player.video_player(queue, message.guild, server_queue.songs[0]);
+            player.video_player(message, queue, message.guild, server_queue.songs[0]);
         }else{
             message.channel.send('No song is playing!');
         }
