@@ -1,24 +1,53 @@
 const Discord = require('discord.js');
 const fs = require('fs');
-
+const gif = 'https://c.tenor.com/R_mwXHSitkQAAAAC/plank-ed-edd-n-eddy.gif';
 
 
 module.exports = {
 	name: 'help',
 	description: 'Shows all commands',
 	execute(message, args) {
-		const commandFiles = fs.readdirSync(__dirname).filter(file => file.endsWith('.js'));
-        const commandEmbed = new Discord.MessageEmbed()
-                    .setColor(0x333333)
-                    .setAuthor("All Commands of DenisBot")
-                    .setImage('https://media1.giphy.com/media/Te4NwB59ZFn68/200.gif')
-    
-        for (const file of commandFiles) {
-            const command = require(`${__dirname}/${file}`);
-            commandEmbed.addField(command.name.substring(0,1).toUpperCase()+command.name.substring(1), command.description + '\n' + (command.aliases || ''))
+        var cmd = '';
+        if(args[0] != undefined){
+            cmd = args[0].toLowerCase();
         }
-                    
-        message.channel.send(commandEmbed);
+        var title = '';
+        var directory = '';    
+
+        if(cmd == 'music'){
+            title = 'All Music Commands of DenisBot';
+            directory = `${__dirname}/music/`;
+            
+            return message.channel.send(createHelpEmbed(title, directory));
+        }
+		
+        title = 'All Commands of DenisBot';
+        directory = `${__dirname}/`;
+        let embed = createHelpEmbed(title, directory);
+        embed.setFooter('Write whelp music, for Music Commands');
+            
+        return message.channel.send(embed);
+        
+
 
 	},
 };
+
+
+const createHelpEmbed = (title, directory) => {
+    const commandFiles = fs.readdirSync(directory).filter(file => file.endsWith('.js'));
+    let commandEmbed = new Discord.MessageEmbed()
+        .setAuthor(title)
+        .setImage(gif)
+    
+    for (const file of commandFiles) {
+        const command = require(`${directory}/${file}`);
+        let aliases = '';
+        if(command.aliases != undefined && command.aliases.length > 0){
+            aliases = `**${command.aliases.join(' ')}**`
+        }
+        commandEmbed.addField(command.name.substring(0,1).toUpperCase()+command.name.substring(1), command.description + '\n' + aliases, true)
+    }
+                
+    return commandEmbed;
+}
