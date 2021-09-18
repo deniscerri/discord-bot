@@ -9,10 +9,14 @@ module.exports = {
         const queue = index.queue;
 
         if(!voice_ch){ return message.channel.send('You need to be in a audio channel to execute this command!');}
-        const server_queue = queue.get(message.guild.id);
+        if(!message.guild.me.voice.channel) return message.channel.send('I am not in a voice channel!');
         
-        if(server_queue == undefined) { return message.channel.send('Bot is not in an audio channel currently!')}
-        server_queue.songs = [];
-        server_queue.connection.disconnect();
+        if(message.guild.me.voice.channel == voice_ch){
+            queue.delete(message.guild.id);
+            message.guild.me.voice.channel.leave();
+        }else{
+            message.channel.send('You need to be in the same audio channel as the bot to kick it!');
+        }
+
     }
 }

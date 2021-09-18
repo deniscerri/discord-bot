@@ -55,6 +55,7 @@ module.exports = {
                                 msg();
                             }else{
                                 message.channel.send('There are only '+(limit-1)+' search results!');
+                                msg();
                             }
                         }
                     })

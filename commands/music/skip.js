@@ -31,6 +31,7 @@ module.exports = {
                 }
             }
         }
+        message.channel.send('⏭ Skipping!')
         server_queue.connection.dispatcher.end();
 
     }
