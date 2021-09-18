@@ -60,8 +60,7 @@ module.exports = {
         }
         
         var media = await fetchData(query);
-
-        if(media.length == 0 || media.results == undefined){
+        if(media.length == 0 || media.results.length == 0 || media.results == undefined){
             message.channel.send("No media was found. :(");
             return;
         }
