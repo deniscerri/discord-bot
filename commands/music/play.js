@@ -88,7 +88,7 @@ async function add_to_queue(message, queue, server_queue, song, voice_ch){
         }
     }else{
         server_queue.songs.push(song);
-        return message.channel.send('`'+song.title+'` added to the Queue in Position **Nr.'+(server_queue.songs.length-1)+'**!')
+        return now_playing.added_to_queue(message, server_queue);
     }
 }
 
