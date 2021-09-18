@@ -24,12 +24,20 @@ module.exports = {
         const videos = await finder(args.join(' '));
         if(videos){
             let embed = new Discord.MessageEmbed()
-                .setTitle('🔎 Search Results:')
+                .setTitle('🔎 Search Results: [Write one of the numbers shown]')
 
             let limit = (videos.length > 10) ? 10 : videos.length;
             let desc = '';
+            var length = '';
+
             for(var i = 0; i < limit; i++){
-                desc += '`'+(i+1)+'.` '+videos[i].title +'\n';
+                if(videos[i].seconds < 3600){
+                    length = new Date(videos[i].seconds * 1000).toISOString().substr(14, 5)
+                }else{
+                    length = new Date(videos[i].seconds * 1000).toISOString().substr(11, 8)
+                }
+
+                desc += '`'+(i+1)+'.` ['+videos[i].title +']('+videos[i].url+') `['+length+']` \n';
             }
 
             embed.setDescription(desc);
@@ -44,12 +52,19 @@ module.exports = {
                     })
                     .then(message => {
                         message = message.first();
-                        
+                        if(message == undefined){
+                            return;
+                        }
                         if(Number.isInteger(parseInt(message.content))){
                             let query = parseInt(message.content);
                             query--;
                             if(query < limit){
-                                let song = {title: videos[query].title, url: videos[query].url};
+                                let song = {
+                                    title: videos[query].title,
+                                    url: videos[query].url, 
+                                    length_seconds: videos[query].seconds, 
+                                    requestedBy: message.author.username+'#'+message.author.discriminator
+                                };
                                 player.add_to_queue(message, queue, server_queue, song, voice_ch);
                                 server_queue = queue.get(message.guild.id);
                                 msg();

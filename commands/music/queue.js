@@ -12,18 +12,32 @@ module.exports = {
 
         var embeds = [];
         var limit = 10;
+
+        var lengths = [];
+        var totalLength = 0;
+        for(var i = 0; i < server_queue.songs.length; i++){
+            let length = 0;
+            if(server_queue.songs[i].length_seconds < 3600){
+                length = new Date(parseInt(server_queue.songs[i].length_seconds) * 1000).toISOString().substr(14, 5)
+            }else{
+                length = new Date(parseInt(server_queue.songs[i].length_seconds) * 1000).toISOString().substr(11, 8)
+            }
+            lengths.push(length);
+            totalLength += parseInt(server_queue.songs[i].length_seconds);
+        }
+        totalLength = new Date(totalLength * 1000).toISOString().substr(14, 5)
+
         for(var i = 0; i < server_queue.songs.length; i+=limit){
-            let tmp_embed = build_queue(server_queue, message , i, limit);
+            let tmp_embed = build_queue(server_queue, lengths, message , i, limit);
             embeds.push(tmp_embed);
         }
         
         
-        let plural = (server_queue.songs.length == 1) ? 'song' : 'songs';
-        if(embeds.length > 1){
-            embeds.forEach((e, i) => {
-                e.setFooter(`\n\n ${server_queue.songs.length-1} ${plural} in queue\nPage ${i+1} out of ${embeds.length}`);
-            });
-        }
+        let plural = (server_queue.songs.length == 2) ? 'song' : 'songs';
+        
+        embeds.forEach((e, i) => {
+            e.setFooter(`\n\n ${server_queue.songs.length-1} ${plural} in queue | ${totalLength} Total Length\nPage ${i+1}/${embeds.length}`);
+        });
 
         var i = 0;
         var msg = message.channel.send(embeds[i])
@@ -60,14 +74,15 @@ module.exports = {
 }
 
 
-const build_queue = (server_queue, message, index, limit) =>{
+const build_queue = (server_queue, lengths, message, index, limit) =>{
+
     var embed = new Discord.MessageEmbed()
         .setAuthor('DenisBOT', 'https://cdn50.picsart.com/168503106000202.png', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
         .setTitle(`${message.guild.name}'s Music Queue!`)
         .setColor('#FFFF00')
     index++;
 
-    let description = `**NOW PLAYING**\n${server_queue.songs[0].title}`;
+    let description = `**NOW PLAYING**\n [${server_queue.songs[0].title}](${server_queue.songs[0].url}) | `+'`'+lengths[0]+' Requested by: '+server_queue.songs[0].requestedBy+'`';
     if(server_queue.connection.dispatcher != null){
         if(server_queue.connection.dispatcher.pausedSince != null && server_queue.connection.dispatcher.pausedSince > 0){
             description+=' ⏸';
@@ -87,11 +102,12 @@ const build_queue = (server_queue, message, index, limit) =>{
     if(limit > 1){
         description += '\n\n :arrow_down: Up Next: :arrow_down: \n\n';
     }
-   
+
     for(var i = index; i < limit;i++){
-        description += '`'+i+'.`' + ` ${server_queue.songs[i].title}\n`;
+        description += '`'+i+'.`' + ` [${server_queue.songs[i].title}](${server_queue.songs[i].url}) | `+'`'+lengths[i]+' Requested by: '+server_queue.songs[i].requestedBy+'`\n';
     }
     embed.setDescription(description);
 
     return embed;
 }
+
