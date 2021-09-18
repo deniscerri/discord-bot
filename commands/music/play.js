@@ -2,6 +2,7 @@ const ytdl = require('ytdl-core');
 const ytsc = require('yt-search');
 const Discord = require("discord.js");
 const index = require('../../index.js');
+const now_playing = require(`${__dirname}/now_playing.js`);
 
 
 module.exports = {
@@ -30,7 +31,12 @@ module.exports = {
         if(ytdl.validateURL(args[0])){
             message.channel.send('🧐 Searching for: `'+args[0]+'`...');
             const song_info = await ytdl.getInfo(args[0]);
-            song = {title: song_info.videoDetails.title, url: song_info.videoDetails.video_url}
+            song = {
+                title: song_info.videoDetails.title,
+                url: song_info.videoDetails.video_url, 
+                length_seconds: song_info.length_seconds,
+                requestedBy: message.author.username+'#'+message.author.discriminator
+            }
         
         
         // if its a search query
@@ -43,13 +49,18 @@ module.exports = {
 
             const video = await finder(args.join(' '));
             if(video){
-                song = {title: video.title, url: video.url};
+                song = {
+                    title: video.title, 
+                    url: video.url, 
+                    length_seconds: video.seconds, 
+                    requestedBy: message.author.username+'#'+message.author.discriminator
+                };
             }else{
                 message.channel.send("Error finding video. ");
                 return;
             }
+            
         }
-
         add_to_queue(message, queue, server_queue, song, voice_ch);
     },
 }
@@ -105,7 +116,7 @@ async function video_player(message, queue, guild, song){
         video_player(message, queue, guild, song_queue.songs[0]);
     });
 
-    await song_queue.text_channel.send('🎶 Now Playing `'+song.title+'`');
+    await now_playing.execute(message , []);
 }
 
 
