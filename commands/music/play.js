@@ -50,32 +50,35 @@ module.exports = {
             }
         }
 
-        if(!server_queue){
-
-            const queue_constructor = {
-                voice_channel: voice_ch,
-                text_channel: message.channel,
-                connection: null,
-                repeat: false,
-                songs: []
-            }
-
-            queue.set(message.guild.id, queue_constructor);
-            queue_constructor.songs.push(song);
-
-            try{
-                const connection  = await voice_ch.join();
-                queue_constructor.connection = connection;
-                video_player(queue,message.guild, queue_constructor.songs[0])
-            }catch(err){
-                queue.delete(message.guild.id);
-                message.channel.send('There was an error connecting! ');
-            }
-        }else{
-            server_queue.songs.push(song);
-            return message.channel.send('`'+song.title+'` added to the queue!')
-        }
+        add_to_queue(message, queue, server_queue, song, voice_ch);
     },
+}
+
+async function add_to_queue(message, queue, server_queue, song, voice_ch){
+    if(!server_queue){
+        const queue_constructor = {
+            voice_channel: voice_ch,
+            text_channel: message.channel,
+            connection: null,
+            repeat: false,
+            songs: []
+        }
+
+        queue.set(message.guild.id, queue_constructor);
+        queue_constructor.songs.push(song);
+
+        try{
+            const connection  = await voice_ch.join();
+            queue_constructor.connection = connection;
+            video_player(queue,message.guild, queue_constructor.songs[0])
+        }catch(err){
+            queue.delete(message.guild.id);
+            message.channel.send('There was an error connecting! ');
+        }
+    }else{
+        server_queue.songs.push(song);
+        return message.channel.send('`'+song.title+'` added to the queue!')
+    }
 }
 
 async function video_player(queue, guild, song){
@@ -89,6 +92,12 @@ async function video_player(queue, guild, song){
 
     const stream = ytdl(song.url, { filter: 'audioonly'});
     song_queue.connection.play(stream, {seek: 0, volume: 1})
+    .on('error', () => {
+        message.channel.send('Error playing stream!');
+        song_queue.songs.shift();
+        song_queue.repeat = false;
+        video_player(queue, guild, song_queue.songs[0]);
+    })
     .on('finish', () =>{
         if(!song_queue.repeat){
            song_queue.songs.shift();
@@ -101,3 +110,4 @@ async function video_player(queue, guild, song){
 
 
 module.exports.video_player = video_player;
+module.exports.add_to_queue = add_to_queue;
