@@ -65,7 +65,8 @@ module.exports = {
                                     length_seconds: videos[query].seconds, 
                                     requestedBy: message.author.username+'#'+message.author.discriminator
                                 };
-                                player.add_to_queue(message, queue, server_queue, song, voice_ch);
+                                songs = [song];
+                                player.add_to_queue(message, queue, server_queue, songs, voice_ch);
                                 server_queue = queue.get(message.guild.id);
                                 msg();
                             }else{
