@@ -10,6 +10,11 @@ module.exports = {
         
         if(!server_queue) return message.channel.send('There are no songs in the queue!');
 
+        if(args[0] == 'clear'){
+            clear_queue(message,queue, server_queue, args);
+            return;
+        }
+
         var embeds = [];
         var limit = 10;
 
@@ -18,14 +23,21 @@ module.exports = {
         for(var i = 0; i < server_queue.songs.length; i++){
             let length = 0;
             if(server_queue.songs[i].length_seconds < 3600){
-                length = new Date(parseInt(server_queue.songs[i].length_seconds) * 1000).toISOString().substr(14, 5)
+                length = new Date(server_queue.songs[i].length_seconds * 1000).toISOString().substr(14, 5)
             }else{
-                length = new Date(parseInt(server_queue.songs[i].length_seconds) * 1000).toISOString().substr(11, 8)
+                length = new Date(server_queue.songs[i].length_seconds * 1000).toISOString().substr(11, 8)
             }
             lengths.push(length);
-            totalLength += parseInt(server_queue.songs[i].length_seconds);
+            totalLength += server_queue.songs[i].length_seconds;
         }
-        totalLength = new Date(totalLength * 1000).toISOString().substr(14, 5)
+        //current playing song streaming time
+        let time = server_queue.connection.dispatcher.streamTime / 1000 || 0;
+        totalLength = totalLength - time;
+        if(totalLength < 3600){
+            totalLength = new Date(totalLength * 1000).toISOString().substr(14, 5)
+        }else{
+            totalLength = new Date(totalLength * 1000).toISOString().substr(11, 8)
+        }
 
         for(var i = 0; i < server_queue.songs.length; i+=limit){
             let tmp_embed = build_queue(server_queue, lengths, message , i, limit);
@@ -33,13 +45,26 @@ module.exports = {
         }
         
         
-        let plural = (server_queue.songs.length == 2) ? 'song' : 'songs';
-        
+        let plural_song = (server_queue.songs.length == 2) ? 'song' : 'songs';
         embeds.forEach((e, i) => {
-            e.setFooter(`\n\n ${server_queue.songs.length-1} ${plural} in queue | ${totalLength} Total Length\nPage ${i+1}/${embeds.length}`);
+            e.setFooter(`\n\n ${server_queue.songs.length-1} ${plural_song} in queue | ${totalLength} Total Length\nPage ${i+1}/${embeds.length}`);
         });
 
         var i = 0;
+        let query = parseInt(args[0]);
+        if(Number.isInteger(query)){
+            if(query <= embeds.length){
+                i = query % (embeds.length+1);
+                if(i >= 1){
+                    i--;
+                }
+            }else{
+                let plural_page = (embeds.length == 1) ? 'page' : 'pages';
+                message.channel.send('There are only '+embeds.length+' '+plural_page+' in the queue!');
+                return;
+            }
+            
+        }
         var msg = message.channel.send(embeds[i])
             .then(async function(msg){
                 if(embeds.length > 1){
@@ -111,3 +136,36 @@ const build_queue = (server_queue, lengths, message, index, limit) =>{
     return embed;
 }
 
+const clear_queue = (message,queue, server_queue, args) => {
+    const voice_ch = message.member.voice.channel;
+    if(!(message.guild.me.voice.channel == voice_ch)){
+        return message.channel.send('You need to be in the same audio channel as the bot to clear the queue!');
+    }
+    if(!args[1]){
+        server_queue.songs = [];
+        server_queue.connection.dispatcher.end();
+        queue.delete(message.guild.id);
+        message.channel.send('Queue cleared completely!')
+        return;
+    }
+    let start = args[1];
+    let end = args[1];
+    if(args[2]){
+        end = args[2];
+    }
+    start = parseInt(start);
+    end = parseInt(end);
+    if(!(Number.isInteger(start) && Number.isInteger(end))){
+        return message.channel.send('Add only numbers as indexes!');
+    }
+    let limit = server_queue.songs.length;
+    if((start < 0 || start == 0 || start > limit) || (end < 0 || end == 0 || end > limit) || end < start){
+        return message.channel.send('Indexes are out of reach.');
+    }
+    try{
+        server_queue.songs.splice(start, end-start+1);
+        message.channel.send('Queue cleared!');
+    }catch(err){
+        message.channel.send('Error clearing queue!');
+    }
+}
