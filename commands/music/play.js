@@ -130,9 +130,10 @@ async function search(message, queue, server_queue, voice_ch, args){
                 song = {
                     title: song_info.videoDetails.title,
                     url: song_info.videoDetails.video_url, 
-                    length_seconds: song_info.length_seconds,
+                    length_seconds: song_info.videoDetails.lengthSeconds,
                     requestedBy: message.author.username+'#'+message.author.discriminator
                 }
+               
                 songs.push(song);
             // if its a search query
             }else{

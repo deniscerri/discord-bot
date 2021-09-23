@@ -3,40 +3,40 @@ var Scraper = require('images-scraper');
 var Discord = require('discord.js');
 
 const minimal_args = [
-//   '--autoplay-policy=user-gesture-required',
-//   '--disable-background-networking',
-//   '--disable-background-timer-throttling',
-//   '--disable-backgrounding-occluded-windows',
-//   '--disable-breakpad',
-//   '--disable-client-side-phishing-detection',
-//   '--disable-component-update',
-//   '--disable-default-apps',
-//   '--disable-dev-shm-usage',
-//   '--disable-domain-reliability',
-//   '--disable-extensions',
-//   '--disable-features=AudioServiceOutOfProcess',
-//   '--disable-hang-monitor',
-//   '--disable-ipc-flooding-protection',
-//   '--disable-notifications',
-//   '--disable-offer-store-unmasked-wallet-cards',
-//   '--disable-popup-blocking',
-//   '--disable-print-preview',
-//   '--disable-prompt-on-repost',
-//   '--disable-renderer-backgrounding',
-     '--disable-setuid-sandbox',
-//   '--disable-speech-api',
-//   '--disable-sync',
-//   '--hide-scrollbars',
-//   '--ignore-gpu-blacklist',
-//   '--metrics-recording-only',
-//   '--mute-audio',
-//   '--no-default-browser-check',
-//   '--no-first-run',
-//   '--no-pings',
-//   '--no-zygote',
-//   '--password-store=basic',
-//   '--use-gl=swiftshader',
-//   '--use-mock-keychain',
+  '--autoplay-policy=user-gesture-required',
+  '--disable-background-networking',
+  '--disable-background-timer-throttling',
+  '--disable-backgrounding-occluded-windows',
+  '--disable-breakpad',
+  '--disable-client-side-phishing-detection',
+  '--disable-component-update',
+  '--disable-default-apps',
+  '--disable-dev-shm-usage',
+  '--disable-domain-reliability',
+  '--disable-extensions',
+  '--disable-features=AudioServiceOutOfProcess',
+  '--disable-hang-monitor',
+  '--disable-ipc-flooding-protection',
+  '--disable-notifications',
+  '--disable-offer-store-unmasked-wallet-cards',
+  '--disable-popup-blocking',
+  '--disable-print-preview',
+  '--disable-prompt-on-repost',
+  '--disable-renderer-backgrounding',
+  '--disable-setuid-sandbox',
+  '--disable-speech-api',
+  '--disable-sync',
+  '--hide-scrollbars',
+  '--ignore-gpu-blacklist',
+  '--metrics-recording-only',
+  '--mute-audio',
+  '--no-default-browser-check',
+  '--no-first-run',
+  '--no-pings',
+  '--no-zygote',
+  '--password-store=basic',
+  '--use-gl=swiftshader',
+  '--use-mock-keychain',
   '--no-sandbox',
 ];
 
@@ -55,23 +55,20 @@ module.exports = {
   aliases: ['image','images','mg','pic','picture'],
 	description: 'Get random images from the net!',
 	async execute(message, args) {
-	      // extract search query from message
-	      var search = args.slice(0).join(" ");
-	      var nr = 50;
+    // extract search query from message
+    var search = args.slice(0).join(" ");
+    var nr = 50;
 
-	      if(search === ""){
-		message.channel.send("What pic do u want me to search smh!");
-		return;
-	      }
-		
-		if(search.endsWith(" 1")){
-		  search = search.substring(0,search.length-2);
-		  nr = 1;
-		}
-		var i = 0;
-		const results = await google.scrape(search,nr);
-		var msg = message.channel.send(results[i].url)
-			.then(async function(msg){
+    if(search === ""){
+      message.channel.send("What pic do u want me to search smh!");
+      return;
+    }
+
+    var i = 0;
+    message.channel.send('🔎📷 Searching for: `'+search+'`');
+    const results = await google.scrape(search,nr);
+    var msg = message.channel.send(results[i].url)
+      .then(async function(msg){
                 msg.react('⏭')
                 msg.react('🔀');
                 await msg.awaitReactions(reaction => {

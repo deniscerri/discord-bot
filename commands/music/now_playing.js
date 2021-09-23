@@ -20,9 +20,9 @@ module.exports = {
 
             let length = 0;
             if(song.length_seconds < 3600){
-                length = new Date(parseInt(song.length_seconds) * 1000).toISOString().substr(14, 5)
+                length = new Date(song.length_seconds * 1000).toISOString().substr(14, 5)
             }else{
-                length = new Date(parseInt(song.length_seconds) * 1000).toISOString().substr(11, 8)
+                length = new Date(song.length_seconds * 1000).toISOString().substr(11, 8)
             }
 
             let time = server_queue.connection.dispatcher.streamTime / 1000;
@@ -55,7 +55,10 @@ module.exports = {
             description += '`Requested by:` ' + song.requestedBy +'\n\n';
 
             let upNext = 'Nothing';
-            if(server_queue.songs[1]){
+            if(server_queue.repeat){
+                upNext = server_queue.songs[0].title + ' 🔂';
+            }
+            else if(server_queue.songs[1]){
                 upNext = server_queue.songs[1].title;
             }
             description += '`Up Next:` '+upNext;

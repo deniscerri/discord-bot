@@ -3,6 +3,7 @@ const Discord = require("discord.js");
 
 module.exports = {
 	name: 'queue',
+    aliases: ['wq'],
 	description: 'Shows the Music Queue',
 	async execute(message, args) {
         const queue = index.queue;
@@ -31,7 +32,7 @@ module.exports = {
             totalLength += server_queue.songs[i].length_seconds;
         }
         //current playing song streaming time
-        let time = server_queue.connection.dispatcher.streamTime / 1000 || 0;
+        let time = server_queue.connection.dispatcher.streamTime / 1000 ?? 0;
         totalLength = totalLength - time;
         if(totalLength < 3600){
             totalLength = new Date(totalLength * 1000).toISOString().substr(14, 5)
