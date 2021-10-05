@@ -30,7 +30,7 @@ module.exports = {
     description: 'Send Memes',
     execute(message, args) {
         let subreddit = '';
-        if(!args){
+        if(args.length == 0){
             subreddit = reddit[Math.floor(Math.random() * reddit.length)];
         }else{
             subreddit = args[0];
@@ -49,14 +49,18 @@ module.exports = {
                         return;
                     }
                 }
-                var thememe = (json.data.children)[random].data;
+
+                json = (json.data.children).filter(function (entry){
+                    return entry.data.post_hint === 'image';
+                })
+
+                var thememe = json[random].data;
                 
                 let embed = new Discord.MessageEmbed()
                     .setTitle(thememe.title)
                     .setURL(`https://reddit.com${thememe.permalink}`)
                     .setFooter(`👍 ${thememe.ups} 💬 ${thememe.num_comments} | Subreddit: r/ ${thememe.subreddit}`)
-
-                message.channel.send(thememe.url)
+                    .setImage(thememe.url)
                 message.channel.send(embed);
                 
                 
