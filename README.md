@@ -45,5 +45,5 @@ I thank every developer that have made the projects this bot depends on. :)
 
 INVITE BOT:
 ---
-[Click Here](https://discord.com/api/oauth2/authorize?client_id=746827569311121479&permissions=0&scope=bot)
+[Click Here](https://discord.com/oauth2/authorize?client_id=746827569311121479&permissions=36760896&scope=bot)
 
