@@ -1,6 +1,7 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 const Discord = require("discord.js");
 const key = process.env['moviedb'];
+const baseURL = process.env['TMDBproxy'];
 
 
 module.exports = {
@@ -19,7 +20,7 @@ module.exports = {
             for(var i = 1; i <= args.length-1; i++){
               query+=' '+args[i]+' ';
             }
-            query = `https://api.themoviedb.org/3/search/movie?api_key=${key}&language=en-US&query=${query}&page=1&include_adult=false`;
+            query = `${baseURL}/3/search/movie?api_key=${key}&language=en-US&query=${query}&page=1&include_adult=false`;
 
           }else{
             var el = args[args.length-1];
@@ -49,29 +50,38 @@ module.exports = {
             }
 
 
-            query = `https://api.themoviedb.org/3/search/tv?api_key=${key}&language=en-US&query=${query}&page=1&include_adult=false`;
+            query = `${baseURL}/3/search/tv?api_key=${key}&language=en-US&query=${query}&include_adult=false`;
           }
         }else{
           if(type == 'mov' || type == 'movie'){
-            query = `https://api.themoviedb.org/3/discover/movie?api_key=${key}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&with_watch_monetization_types=flatrate`
+            query = `${baseURL}/3/discover/movie?api_key=${key}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&with_watch_monetization_types=flatrate`
           }else{
-            query = `https://api.themoviedb.org/3/discover/tv?api_key=${key}&language=en-US&sort_by=popularity.desc&page=1&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate`
+            query = `${baseURL}/3/discover/tv?api_key=${key}&language=en-US&sort_by=popularity.desc&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate`
           }
         }
         
         var media = await fetchData(query);
-        if(media.length == 0 || media.results.length == 0 || media.results == undefined){
+        if(Object.keys(media).length == 0 || media.results.length == 0){
             message.channel.send("No media was found. :(");
             return;
         }
+
+        media.results = (media.results).filter(function (entry){
+            return entry.vote_average > 0;
+        })
+        media.total_pages = media.results % 20;
+        if(media.results / 20 > 0){
+            media.total_pages++;
+        }
+
+
         if(type =='mov'){type = 'movie'};
-        var extra_query = `https://api.themoviedb.org/3/${type}/${media.results[0].id}?api_key=${key}&language=en-US`;
-        
+        var extra_query = `${baseURL}/3/${type}/${media.results[0].id}?api_key=${key}&language=en-US`;
         var currentMedia = await fetchData(extra_query);
 
         
         var i = 0;
-
+        var pageIndex = 1;
         var msg = message.channel.send(embed(currentMedia, type, season, episode))
         .then(async function(msg){
             if(media.results.length > 1){
@@ -81,29 +91,35 @@ module.exports = {
                     if(reaction.emoji.reaction.count > 1){
                         switch(reaction.emoji.name){
                         case '⏭':
-                            i = ++i % media.results.length;
+                            i++;
+                            if((i % media.results.length) == 0 && media.total_pages > pageIndex){
+                                pageIndex++;
+                                query = query + '&page='+pageIndex;
+                                media = await fetchData(query);
+                            }
                             break;
                         case '⏮':
-                            i = --i % media.results.length;
+                            i--;
+                            if((i % (media.results.length - 1)) == 0 && pageIndex > 1){
+                                pageIndex--;
+                                query = query + '&page='+pageIndex;
+                                media = await fetchData(query);
+                            }
                             break;
                         case '🔀':
                             i = Math.floor(Math.random() * media.results.length);
                             break;
                         }
                         
-                        extra_query = `https://api.themoviedb.org/3/${type}/${media.results[i].id}?api_key=${key}&language=en-US`;
+                        extra_query = `${baseURL}/3/${type}/${media.results[i % 20].id}?api_key=${key}&language=en-US`;
                         currentMedia = await fetchData(extra_query);
                         msg.edit(embed(currentMedia, type, season, episode));
 
                         msg.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                        if(i == media.results.length){
-                        msg.react('⏮')
-                        }else if(i == 0){
-                        msg.react('⏭')
-                        }else{
-                        msg.react('⏮')
-                        msg.react('⏭')
+                        if(pageIndex > 1 || i > 0){
+                            msg.react('⏮')
                         }
+                        msg.react('⏭')
                         msg.react('🔀')
                         
                     }
@@ -115,10 +131,9 @@ module.exports = {
 }
 
 async function fetchData(url){
-    let settings = { method: "Get" };
     try{
-        var response = await fetch(url, settings)
-        let json = await response.json();
+        const response = await axios.get(url)
+        let json = response.data;
         return json;       
     }catch(err){
         let json = {};
@@ -130,11 +145,13 @@ async function fetchData(url){
 function embed(media, type, season, episode){
     let posterPath = `https://www.themoviedb.org/t/p/w600_and_h900_bestv2${media.poster_path}`;
     let genres;
-    if(media.genres.length == 0) genres = 'Unknown'
-    else genres = ''
-    media.genres.forEach(genre => {
-        genres+= genre.name +' ';
-    })
+    if(media.genres == undefined) genres = 'Unknown'
+    else{
+        genres = ''
+        media.genres.forEach(genre => {
+            genres+= genre.name +' ';
+        })
+    }
     
     var embed = new Discord.MessageEmbed()
         .setTitle(media.original_title || media.name)
