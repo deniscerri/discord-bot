@@ -43,7 +43,3 @@ Don't forget to provide your own API Keys in your .env file. All API's used in t
 Alot of the bot's commands are powered through REST API calls.
 I thank every developer that have made the projects this bot depends on. :)
 
-INVITE BOT:
----
-[Click Here](https://discord.com/oauth2/authorize?client_id=746827569311121479&permissions=36760896&scope=bot)
-
