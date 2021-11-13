@@ -8,7 +8,7 @@ module.exports = {
     var topicText = fs.readFileSync("./txt/topic.txt").toString();
     var topic = topicText.split("\n");
 
-		message.channel.send(topic[Math.floor(Math.random() * topic.length)]);
+		message.channel.send({content:topic[Math.floor(Math.random() * topic.length)]});
     
 	},
 };

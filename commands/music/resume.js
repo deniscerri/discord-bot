@@ -1,8 +1,8 @@
 const index = require('../../index.js');
 
 module.exports = {
-	name: 'pause',
-	description: 'Pauses the current playing song',
+	name: 'resume',
+	description: 'Resumes the current song',
 	async execute(message, args) {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
@@ -15,8 +15,8 @@ module.exports = {
             if(!server_queue) {
                 message.channel.send({content: 'No song is playing!'}); return;
             }else{
-                server_queue.audioPlayer.pause();
-                message.channel.send({content:`⏸ Paused **${server_queue.songs[0].title}**`})
+                server_queue.audioPlayer.unpause();
+                message.channel.send({content:`▶️ Resumed **${server_queue.songs[0].title}**`})
             }
         }else{
             message.channel.send({content: 'You need to be in the same audio channel as the bot to pause a song!'});

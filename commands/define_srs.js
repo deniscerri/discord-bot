@@ -8,18 +8,18 @@ module.exports = {
     aliases: ['defsrs','defser','defs', 'dic'],
 	description: 'Gives definition of said word, seriously!',
 	async execute(message, args) {
-    var question = args.slice(0).join(" ");
-    url = `https://api.dictionaryapi.dev/api/v2/entries/en/${question}`;
-    if(question === ''){
-      return message.channel.send("Write a word you need the definition for!")
-    }
-    
-    var json = await fetchDefinitions();
-    message.channel.send(embed(json, message));
-    
-    return;
+        var question = args.slice(0).join(" ");
+        url = `https://api.dictionaryapi.dev/api/v2/entries/en/${question}`;
+        if(question === ''){
+        return message.channel.send({content: "Write a word you need the definition for!"})
+        }
+
+        var json = await fetchDefinitions();
+        message.channel.send({embeds: [embed(json, message)]});
+
+        return;
 	},
-  
+
 };
 
 
@@ -33,13 +33,13 @@ module.exports = {
 
 function embed(json, message){
     if(json.title){
-        return message.channel.send('No definition found. :(');
+        return message.channel.send({content: 'No definition found. :('});
     }
 
     let description = '';
     var embed = new MessageEmbed()
       .setTitle((json[0].word).charAt(0).toUpperCase() + json[0].word.substring(1))
-    
+
     for(var i = 0; i < json[0].meanings.length; i++){
       let meaning = json[0].meanings[i];
       description += `**Meaning ${(i+1)}** *${meaning.partOfSpeech}*\n`;

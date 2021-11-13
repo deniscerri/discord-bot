@@ -1,28 +1,32 @@
 {
-  "name": "denisdiscordbot-master",
+  "name": "denisdiscordbot",
   "version": "1.0.0",
-  "description": "Fun Discord Bot",
+  "description": "**My first project on discord.**",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deniscerri/denisDiscordBot.git"
+  },
   "author": "Denis Çerri",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/deniscerri/denisDiscordBot/issues"
+  },
+  "homepage": "https://github.com/deniscerri/denisDiscordBot#readme",
   "dependencies": {
-    "@discordjs/opus": "github:discordjs/opus",
-    "axios": "^0.23.0",
-    "discord.js": "^12.5.3",
+    "@discordjs/voice": "^0.7.5",
+    "axios": "^0.24.0",
+    "discord.js": "^13.3.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "fs": "^0.0.1-security",
-    "genius-lyrics": "^4.2.9",
     "images-scraper": "^6.4.0",
+    "libsodium-wrappers": "^0.7.9",
     "lyrics-parse": "^1.1.1",
-    "node-fetch": "^2.6.1",
-    "puppeteer": "^9.1.1",
-    "song-lyrics-api": "^1.1.0",
-    "yt-search": "^2.10.1",
+    "yt-search": "^2.10.2",
     "ytdl-core": "^4.9.1",
     "ytpl": "^2.2.3"
   }

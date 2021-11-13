@@ -18,7 +18,7 @@ module.exports = {
             title = 'All Music Commands of DenisBot';
             directory = `${__dirname}/music/`;
             
-            return message.channel.send(createHelpEmbed(title, directory));
+            return message.channel.send({embeds: [createHelpEmbed(title, directory)]});
         }
 		
         title = 'All Commands of DenisBot';
@@ -26,7 +26,7 @@ module.exports = {
         let embed = createHelpEmbed(title, directory);
         embed.setFooter('Write whelp music, for Music Commands');
             
-        return message.channel.send(embed);
+        return message.channel.send({embeds: [embed]});
         
 
 

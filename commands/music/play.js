@@ -2,6 +2,7 @@ const ytdl = require('ytdl-core');
 const ytsc = require('yt-search');
 const ytpl = require('ytpl');
 const Discord = require("discord.js");
+const {joinVoiceChannel, AudioResource, createAudioResource, createAudioPlayer} = require('@discordjs/voice');
 const index = require('../../index.js');
 const now_playing = require(`${__dirname}/now_playing.js`);
 
@@ -14,22 +15,22 @@ module.exports = {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
         
-        if(!voice_ch){ return message.channel.send('You need to be in a audio channel to execute this command!');}
+        if(!voice_ch){ return message.channel.send({content: 'You need to be in a audio channel to execute this command!'});}
         
         if(!(message.guild.me.voice.channel == voice_ch) && message.guild.me.voice.channel){
-            return message.channel.send('You need to be in the same audio channel as the bot to play a song!');
+            return message.channel.send({content: 'You need to be in the same audio channel as the bot to play a song!'});
         }
         
         const server_queue = queue.get(message.guild.id);
         if(!args.length){
             if(server_queue){
-                if(server_queue.connection.dispatcher.pausedSince != null && server_queue.connection.dispatcher.pausedSince > 0){
-                    server_queue.connection.dispatcher.resume(true);
-                    message.channel.send(`▶ Resumed **${server_queue.songs[0].title}**`)
+                if(server_queue.audioPlayer._state.status == 'paused'){
+                    server_queue.audioPlayer.unpause();
+                    message.channel.send({content: `▶ Resumed **${server_queue.songs[0].title}**`})
                 }
                 return;
             }else{
-                return message.channel.send('You need to write a song name or link first');
+                return message.channel.send({content: 'You need to write a song name or link first'});
             }
         }
         let songs = await search(message, queue, server_queue, voice_ch, args);
@@ -44,6 +45,7 @@ async function add_to_queue(message, queue, server_queue, songs, voice_ch){
             voice_channel: voice_ch,
             text_channel: message.channel,
             connection: null,
+            audioPlayer: createAudioPlayer(),
             repeat: false,
             songs: []
         }
@@ -52,12 +54,17 @@ async function add_to_queue(message, queue, server_queue, songs, voice_ch){
         songs.forEach(song => queue_constructor.songs.push(song))
 
         try{
-            const connection  = await voice_ch.join();
+            let connection = joinVoiceChannel({
+                channelId: message.member.voice.channel.id,
+                guildId: message.guild.id,
+                adapterCreator: message.guild.voiceAdapterCreator
+            })
             queue_constructor.connection = connection;
             video_player(message,queue,message.guild, queue_constructor.songs[0])
         }catch(err){
+            console.log(err);
             queue.delete(message.guild.id);
-            message.channel.send('There was an error connecting! ');
+            message.channel.send({content: 'There was an error connecting! '});
         }
     }else{
         songs.forEach(song => server_queue.songs.push(song))
@@ -71,28 +78,44 @@ async function add_to_queue(message, queue, server_queue, songs, voice_ch){
 async function video_player(message, queue, guild, song){
 
     if(queue == undefined) {return;}
-    const song_queue = queue.get(guild.id);
+    const server_queue = queue.get(guild.id);
 
     if(!song){
+        server_queue.connection.disconnect();
         queue.delete(guild.id);
         return;
     }
 
     const stream = ytdl(song.url, { filter: 'audioonly'});
-    song_queue.connection.play(stream, {seek: 0, volume: 1})
-    .on('error', () => {
-        message.channel.send('Error playing stream!');
-        song_queue.songs.shift();
-        song_queue.repeat = false;
-        video_player(message, queue, guild, song_queue.songs[0]);
+    try{
+        const track = createAudioResource(stream);
+        server_queue.connection.subscribe(server_queue.audioPlayer);
+        server_queue.audioPlayer.play(track);
+    }catch(err){
+        console.log(err);
+        message.channel.send({content:'Error playing stream!'});
+        server_queue.songs.shift();
+        server_queue.repeat = false;
+        video_player(message, queue, guild, server_queue.songs[0]);
+    }
+    server_queue.audioPlayer.on('idle', ()=>{
+        server_queue.songs.shift();
+        video_player(message, queue, guild, server_queue.songs[0]);
     })
-    .on('finish', () =>{
-        if(!song_queue.repeat){
-           song_queue.songs.shift();
-        }
-        video_player(message, queue, guild, song_queue.songs[0]);
-    });
+    // .on('finish', ()=> {
+    //     if(!server_queue.repeat){
+    //         server_queue.songs.shift();
+    //      }
+    //      video_player(message, queue, guild, server_queue.songs[0]);
+    // })
 
+
+    // .on('error', () => {
+        
+    // })
+    // .on('finish', () =>{
+        
+    // });
     await now_playing.execute(message , []);
 }
 
@@ -102,7 +125,7 @@ async function search(message, queue, server_queue, voice_ch, args){
         //if its a playlist link
         try{
             let checkPlaylist = await ytpl.getPlaylistID(args[0]);
-            message.channel.send('🧐 Searching for playlist: `'+args[0]+'`...');
+            message.channel.send({content: '🧐 Searching for playlist: `'+args[0]+'`...'});
             const results = await ytpl(checkPlaylist, {pages: 1});
             for(var i = 0; i < results.items.length; i++){
                 try{
@@ -125,7 +148,7 @@ async function search(message, queue, server_queue, voice_ch, args){
         }catch(err){
             //if its a single youtube url
             if(ytdl.validateURL(args[0])){
-                message.channel.send('🧐 Searching for: `'+args[0]+'`...');
+                message.channel.send({content: '🧐 Searching for: `'+args[0]+'`...'});
                 const song_info = await ytdl.getInfo(args[0]);
                 song = {
                     title: song_info.videoDetails.title,
@@ -138,7 +161,7 @@ async function search(message, queue, server_queue, voice_ch, args){
             // if its a search query
             }else{
                 const finder = async (query) => {
-                    message.channel.send('🧐 Searching for: `'+args.join(' ')+'`...');
+                    message.channel.send({content: '🧐 Searching for: `'+args.join(' ')+'`...'});
                     const videoResult = await ytsc(query);
                     return (videoResult.videos.length > 1) ? videoResult.videos[0] : null
                 }
@@ -153,7 +176,7 @@ async function search(message, queue, server_queue, voice_ch, args){
                     };
                     songs.push(song);
                 }else{
-                    message.channel.send("Error finding video. ");
+                    message.channel.send({content: "Error finding video. "});
                     return;
                 }
                 

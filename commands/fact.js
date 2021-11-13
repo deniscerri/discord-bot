@@ -2,28 +2,6 @@
 const Discord = require("discord.js");
 const fetch = require('node-fetch');
 
-let reddit = [
-    "dankruto",
-    "memes",
-    "funny",
-    "animememes",
-    "AdviceAnimals",
-    "dankmemes",
-    "wholesomememes",
-    "meirl",
-    "2meirl4meirl",
-    "comedyheaven",
-    "programmerhumor",
-    "cursedcomments",
-    "blursedimages",
-    "dashcamgifs",
-    "theyknew",
-    "CrappyDesign",
-    "starterpacks"
-]
-
-
-
 module.exports = {
     name: 'fact',
     aliases: ['facts'],
@@ -33,9 +11,9 @@ module.exports = {
         .then(res => res.json())
         .then(json => {
             if(json == 'Too Many Attempts.'){
-                message.channel.send("Too Many Attempts. Wait a lil bit and try again!");
+                message.channel.send({content: "Too Many Attempts. Wait a lil bit and try again!"});
             }else{
-                message.channel.send(json.text);
+                message.channel.send({content: json.text});
             }
             
         

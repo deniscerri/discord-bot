@@ -34,16 +34,18 @@ Commands:
 
 Dev environment:
 ---
-After cloning the project you have to install the npm libraries: cd to the project root directory and then:
+After cloning the project you have to install the npm libraries.
+This bot uses the Discord.js v13 package. To run it, you need to have a node version of 16.6 or higher.
 
-```sh
-npm install
-```
 Don't forget to provide your own API Keys in your .env file. All API's used in the bot are free and available for everyone to use.
+
+Apart from the images scraper library, the bot also uses a costum google search api for faster results. You need to create your own at:
+```
+https://developers.google.com/custom-search/v1/overview
+```
+
+
+
 Alot of the bot's commands are powered through REST API calls.
 I thank every developer that have made the projects this bot depends on. :)
-
-INVITE BOT:
----
-[Click Here](https://discord.com/oauth2/authorize?client_id=746827569311121479&permissions=36760896&scope=bot)
 

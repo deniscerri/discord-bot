@@ -3,7 +3,7 @@ const Discord = require('discord.js');
 const keepAlive = require('./server.js');
 
 const {Client, MessageAttachment} = require('discord.js');
-const client = new Client();
+const client = new Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"] });
 client.commands = new Discord.Collection();
 
 const prefix = 'w';
@@ -32,11 +32,11 @@ function getMusicQueue(){
 
 client.once('ready', () => {
     console.log('DenisBot is online!');
-	client.user.setActivity('Super Mario Bros. 2',{type: 'PLAYING'});
+	client.user.setActivity('Ninja Gaiden [NES]',{type: 'PLAYING'});
 });
 
 
-client.on('message', message => {
+client.on('messageCreate', message => {
 	if (!(message.content.toLowerCase()).startsWith(prefix) || message.author.bot) return;
 
 	const args = message.content.slice(prefix.length).trim().split(/ +/);
@@ -52,10 +52,9 @@ client.on('message', message => {
 		command.execute(message, args);
 	} catch (error) {
 		console.error(error);
-		message.reply('there was an error trying to execute that command!');
+		message.reply({content: 'there was an error trying to execute that command!'});
 	}
 });
-
 
 
 

@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const lyricsParse = require('lyrics-parse');
 const index = require('../../index.js');
+const {MessageButton, MessageActionRow} = require("discord.js");
 
 module.exports = {
 	name: 'lyrics',
@@ -27,48 +28,73 @@ module.exports = {
         title = title.replace(/ \[[\s\S]*?\]/g, '');
         
         let lyrics = await lyricsParse(title, author);
-
         if(!lyrics) message.channel.send('No lyrics found! :(')
         else{
             let lyrics_arr = [];
-            while(lyrics.length > 6000){
+            while(lyrics.length > 4000){
                 lyrics_arr.push(lyrics.substring(0, 4000));
                 lyrics = lyrics.substring(4000);
             }
             lyrics_arr.push(lyrics);
 
+            //navigation buttons
+            let next = new MessageButton()
+                .setCustomId("next")
+                .setLabel("Next")
+                .setStyle("PRIMARY")
+            let prev = new MessageButton()
+                .setCustomId("prev")
+                .setLabel("Previous")
+                .setStyle("PRIMARY")  
+
+            let row = new MessageActionRow();
+            let msg;
+            var embed = build_lyrics_embed(server_queue, lyrics_arr, 0);
+            if(lyrics_arr.length > 1){
+                row.addComponents(next);
+                msg = message.channel.send({embeds: [embed], components: [row]})
+            }else{
+                msg = message.channel.send({embeds: [embed]})
+            }
+       
+
 
             var i = 0;
-            var embed = build_lyrics_embed(server_queue, lyrics_arr, 0);
-            
-            var msg = message.channel.send(embed)
-            .then(async function(msg){
+            msg.then(async function(msg){
                 if(lyrics_arr.length > 1){
-                    msg.react('⏭')
-                    await msg.awaitReactions(reaction => {
-                    if(reaction.emoji.reaction.count > 1){
-                        switch(reaction.emoji.name){
-                            case '⏭':
-                            i = ++i % lyrics_arr.length;
-                            break;
-                            case '⏮':
-                            i = --i % lyrics_arr.length;
-                            break;
-                        }
-
-                        msg.edit(build_lyrics_embed(server_queue, lyrics_arr, i));
-                        msg.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                        if(i == lyrics_arr.length){
-                            msg.react('⏮')
+                    const collector = msg.createMessageComponentCollector({
+                        time: 600000
+                    });
+    
+                    collector.on("collect", async (ButtonInteraction) => {
+                        ButtonInteraction.deferUpdate();
+                        const id = ButtonInteraction.customId;
+                        switch(id){
+                            case 'next':
+                                i = ++i % lyrics_arr.length;
+                                break;
+                            case 'prev':
+                                i = --i % lyrics_arr.length;
+                                break;
+                            }
+                        row = new MessageActionRow();
+                        if(i == lyrics_arr.length-1){
+                            row.addComponents(prev);
                         }else if(i == 0){
-                            msg.react('⏭')
+                            row.addComponents(next);
                         }else{
-                            msg.react('⏮')
-                            msg.react('⏭')
+                            row.addComponents(prev);
+                            row.addComponents(next);
                         }
-                    }
-                    
-                    }, {time: 600000});
+                        msg.edit({embeds: [build_lyrics_embed(server_queue, lyrics_arr, i)], components: [row]});
+                    });
+    
+                    collector.on("end", async (ButtonInteraction) => {
+                        row.components.forEach(element => {
+                            element.setDisabled(true);
+                        });
+                        msg.edit({embeds: [build_lyrics_embed(server_queue, lyrics_arr, i)], components: [row]});
+                    })
                 }
             })
 
@@ -82,6 +108,5 @@ const build_lyrics_embed = (server_queue, lyrics_arr, i) => {
     .setTitle(`${server_queue.songs[0].title}'s Lyrics!`)
     .setColor('#FFFF00')
     .setDescription(lyrics_arr[i])
-
     return embed;
  }

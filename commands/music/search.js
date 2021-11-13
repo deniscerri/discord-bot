@@ -11,12 +11,12 @@ module.exports = {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
 
-        if(!voice_ch){ return message.channel.send('You need to be in a audio channel to execute this command!');}
+        if(!voice_ch){ return message.channel.send({content: 'You need to be in a audio channel to execute this command!'});}
         let server_queue = queue.get(message.guild.id);
 
 
         const finder = async (query) => {
-            message.channel.send('🧐 Searching for: `'+args.join(' ')+'`...');
+            message.channel.send({content: '🧐 Searching for: `'+args.join(' ')+'`...'});
             const videoResult = await ytsc(query);
             return (videoResult.videos.length > 1) ? videoResult.videos : null
         }
@@ -43,15 +43,12 @@ module.exports = {
             embed.setDescription(desc);
             let filter = m => m.author.id === message.author.id
             
-            message.channel.send(embed).then(()=>{
+            message.channel.send({embeds: [embed]}).then(()=>{
                 msg();
                 function msg (){
-                    message.channel.awaitMessages(filter, {
-                        max: 1,
-                        time: 30000
-                    })
-                    .then(message => {
-                        message = message.first();
+                    const collector = message.channel.createMessageCollector({filter, max: 1, time: 30000});
+                    collector.on('collect', message => {
+                        
                         if(message == undefined){
                             return;
                         }
@@ -70,16 +67,17 @@ module.exports = {
                                 server_queue = queue.get(message.guild.id);
                                 msg();
                             }else{
-                                message.channel.send('There are only '+(limit-1)+' search results!');
+                                message.channel.send({content: 'There are only '+(limit)+' search results!'});
                                 msg();
                             }
                         }
                     })
+                    
                 }
             })
             
         }else{
-            message.channel.send("Error finding video. ");
+            message.channel.send({content: "Error finding video. "});
             return;
         }
     }

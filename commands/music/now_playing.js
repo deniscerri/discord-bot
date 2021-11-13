@@ -1,5 +1,7 @@
 const index = require('../../index.js');
 const Discord = require("discord.js");
+const {MessageButton, MessageActionRow} = require("discord.js");
+
 
 module.exports = {
 	name: 'np',
@@ -19,39 +21,41 @@ module.exports = {
             let description = `[${song.title}](${song.url})\n\n`;
 
             let length = 0;
-            if(song.length_seconds < 3600){
+            if(song.length_seconds < 3600 && song.length_seconds > 0){
                 length = new Date(song.length_seconds * 1000).toISOString().substr(14, 5)
-            }else{
+            }else if(song.length_seconds > 3600){
                 length = new Date(song.length_seconds * 1000).toISOString().substr(11, 8)
             }
-
-            let time = server_queue.connection.dispatcher.streamTime / 1000;
-            if(time > 0){
+            if(server_queue.audioPlayer._state.status == 'playing' || server_queue.audioPlayer._state.status == 'paused'){
+                let playbackDuration = server_queue.audioPlayer._state.resource.playbackDuration / 1000 ?? 0;
                 let increment = 10;
                 let totalLength = Math.round(song.length_seconds / increment);
                 let progress = Math.round(totalLength / increment);
-                let tick = false;
+                let dial = false;
                 for(var i = 0; i < totalLength; i+=progress){
-                    if(i + progress >= (time / increment) && tick == false){
-                        description += '🔘'
-                        tick = true;
+                    if(i + progress >= (playbackDuration / increment) && dial == false){
+                        description += '◉'
+                        dial = true;
                     }else{
                         description += '▬'
                         
                     }
                 }
                 
-                if(time < 3600){
-                    time = new Date(parseInt(time) * 1000).toISOString().substr(14, 5)
+                if(playbackDuration < 3600){
+                    playbackDuration = new Date(parseInt(playbackDuration) * 1000).toISOString().substr(14, 5)
                 }else{
-                    time = new Date(parseInt(time) * 1000).toISOString().substr(11, 8)
+                    playbackDuration = new Date(parseInt(playbackDuration) * 1000).toISOString().substr(11, 8)
                 }
                 description += '\n\n';
-                description += '`'+time+'/'+length+'`\n\n'
-
+                description += '`'+playbackDuration+'/'+length+'`\n\n'
+                
             }else{
-                description += '`Length:` ' + length + '\n\n'; 
+                if(length != 0){
+                    description += '`Length:` ' + length + '\n\n'; 
+                }
             }
+            
             description += '`Requested by:` ' + song.requestedBy +'\n\n';
 
             let upNext = 'Nothing';
@@ -63,9 +67,11 @@ module.exports = {
             }
             description += '`Up Next:` '+upNext;
             embed.setDescription(description);
-            message.channel.send(embed);
+
+            message.channel.send({embeds: [embed]});
+            
         }else{
-            message.channel.send('The queue is empty!');
+            message.channel.send({content: 'The queue is empty!'});
         }
     }
 }
@@ -88,24 +94,26 @@ const added_to_queue = (message, server_queue, type, position) => {
         embed.setThumbnail(thumbnail)
 
         let length = 0;
-        if(song.length_seconds < 3600){
-            length = new Date(parseInt(song.length_seconds) * 1000).toISOString().substr(14, 5)
-        }else{
-            length = new Date(parseInt(song.length_seconds) * 1000).toISOString().substr(11, 8)
+        if(song.length_seconds < 3600 && song.length_seconds > 0){
+            length = new Date(song.length_seconds * 1000).toISOString().substr(14, 5)
+        }else if(song.length_seconds > 3600){
+            length = new Date(song.length_seconds * 1000).toISOString().substr(11, 8)
         }
 
         let description = `[${song.title}](${song.url})\n\n`;
-        description += '`Length:` ' + length + '\n\n';
+        if(length != 0){
+            description += '`Length:` ' + length + '\n\n';
+        }
 
         let est = 0;
-        let time;
+        let playbackDuration;
         try{
-            time = server_queue.connection.dispatcher.streamTime / 1000;
+            playbackDuration = server_queue.connection.dispatcher.streamplaybackDuration / 1000;
         }catch(err){
-            time = 0;
+            playbackDuration = 0;
         }
         
-        var totalLength = server_queue.songs[0].length_seconds - time;
+        var totalLength = server_queue.songs[0].length_seconds - playbackDuration;
         for(var i = 1; i < position; i++){
             totalLength += parseInt(server_queue.songs[i].length_seconds);
         }
@@ -120,14 +128,14 @@ const added_to_queue = (message, server_queue, type, position) => {
         
         description += '`Position in queue:` ' + position;
         embed.setDescription(description);
-        message.channel.send(embed);
+        message.channel.send({embeds: [embed]});
     }
     else if(type == 'playlist'){
         let embed = new Discord.MessageEmbed()
             .setAuthor('Added Playlist To Queue')
             .setThumbnail(thumbnail)
             .setDescription(`[${song.playlist_title}](${song.playlist_url})\n\n`);
-        message.channel.send(embed);
+        message.channel.send({embeds: [embed]});
     }
 }
 

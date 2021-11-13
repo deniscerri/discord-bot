@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const { MessageEmbed } = require('discord.js');
+const {MessageButton, MessageActionRow, MessageEmbed } = require('discord.js');
 
 let isRandom = false;
 let url;
@@ -17,26 +17,58 @@ module.exports = {
     }
     
     var json = await fetchDefinitions();
+
+    //navigation buttons
+    let another = new MessageButton()
+      .setCustomId("another")
+      .setLabel("Another Definition")
+      .setStyle("PRIMARY")
+    let one_result = new MessageButton()
+      .setCustomId('one')
+      .setLabel('1 Result Found')
+      .setStyle('SECONDARY')
+      .setDisabled(true)
+
+    let row = new MessageActionRow();
+    if(json.list.length > 1){
+        row.addComponents(another);
+    }else{
+        row.addComponents(one_result);
+    }
+
+
     //index to use
     var i = 0;
     try{
-      var msg = message.channel.send(embed(json, i))
+      var msg = message.channel.send({embeds: [embed(json, i)], components: [row] })
       .then(async function(msg){
-          if((json.list).length > 1){
-            msg.react('🔀');
-            await msg.awaitReactions(async reaction => {
-                if(reaction.emoji.name === '🔀' && reaction.emoji.reaction.count > 1){
-                  if(isRandom && i == json.list.length-1){
-                    json = await fetchDefinitions();
-                  }
-                  i++;
-                  i = i % json.list.length;
-                  msg.edit(embed(json, i));
-                  msg.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                  msg.react('🔀');
+          if(json.list.length > 1){
+            const collector = msg.createMessageComponentCollector({
+              time: 600000
+            });
+
+            collector.on("collect", async (ButtonInteraction) => {
+              ButtonInteraction.deferUpdate();
+              const id = ButtonInteraction.customId;
+              if(id == 'another'){
+                if(isRandom && i == json.list.length-1){
+                  json = await fetchDefinitions();
                 }
-            }, {time: 600000});
-          }
+                i++;
+                i = i % json.list.length;
+
+                row = new MessageActionRow();
+                row.addComponents(another);
+
+                msg.edit({embeds: [embed(json, i)], components: [row]});
+              }
+          });
+
+          collector.on("end", (ButtonInteraction) => {
+              msg.edit({embeds: [embed(json, i)]});
+          })
+          
+        }
           
       })
       
