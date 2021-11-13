@@ -73,7 +73,7 @@ module.exports = {
       })
       
    }catch(err){
-      message.channel.send('No definition found. :(');
+      message.channel.send({content: 'No definition found. :('});
    }
     return;
 	},

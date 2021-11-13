@@ -30,7 +30,7 @@ module.exports = {
     var question = args.slice(0).join(" ");
   
     if(question === ''){
-      message.channel.send("Where the question at smh!");
+      message.channel.send({content: "Where the question at smh!"});
         return;
     }
     let answer = answers[Math.floor(Math.random()* answers.length)];
