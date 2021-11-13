@@ -2,28 +2,6 @@
 const Discord = require("discord.js");
 const fetch = require('node-fetch');
 
-let reddit = [
-    "dankruto",
-    "memes",
-    "funny",
-    "animememes",
-    "AdviceAnimals",
-    "dankmemes",
-    "wholesomememes",
-    "meirl",
-    "2meirl4meirl",
-    "comedyheaven",
-    "programmerhumor",
-    "cursedcomments",
-    "blursedimages",
-    "dashcamgifs",
-    "theyknew",
-    "CrappyDesign",
-    "starterpacks"
-]
-
-
-
 module.exports = {
     name: 'fact',
     aliases: ['facts'],
