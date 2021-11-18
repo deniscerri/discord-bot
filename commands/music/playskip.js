@@ -19,6 +19,9 @@ module.exports = {
         if(!(message.guild.me.voice.channel == voice_ch)){
             return message.channel.send({content: 'You need to be in the same audio channel as the bot to play a song!'});
         }
+        if(!args.length){
+            return message.channel.send({content: 'You need to write a song name or link first'})
+        }
 
         if(!server_queue){
             let songs = await play.search(message, queue, server_queue, voice_ch, args);
