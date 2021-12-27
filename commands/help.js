@@ -44,7 +44,7 @@ const createHelpEmbed = (title, directory) => {
         const command = require(`${directory}/${file}`);
         let aliases = '';
         if(command.aliases != undefined && command.aliases.length > 0){
-            aliases = `**${command.aliases.join(' ')}**`
+            aliases = `***Aliases***:\n \`${command.aliases.join(', ')}\``
         }
         commandEmbed.addField(command.name.substring(0,1).toUpperCase()+command.name.substring(1), command.description + '\n' + aliases, true)
     }

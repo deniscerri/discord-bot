@@ -166,7 +166,11 @@ function embed(media, type, season, episode){
     })
     let released = media.release_date || media.first_air_date || 'Unknown';
     let runtime = media.runtime || media.episode_run_time;
-    if(runtime.length == 0){
+    try{
+        if(runtime.length == 0){
+            runtime = 'Unknown';
+        }
+    }catch(err){
         runtime = 'Unknown';
     }
     var embed = new Discord.MessageEmbed()

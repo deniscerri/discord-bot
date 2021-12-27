@@ -32,13 +32,16 @@ module.exports = {
 }
 
 function embed(json, message){
-    if(json.title){
-        return message.channel.send({content: 'No definition found. :('});
+  let description = '';
+  var embed = new MessageEmbed()  
+  
+  if(json.hasOwnProperty('title')){
+      embed.setTitle(json.title);
+      embed.setDescription(description);
+      return embed;
     }
-
-    let description = '';
-    var embed = new MessageEmbed()
-      .setTitle((json[0].word).charAt(0).toUpperCase() + json[0].word.substring(1))
+    
+    embed.setTitle((json[0].word).charAt(0).toUpperCase() + json[0].word.substring(1))
 
     for(var i = 0; i < json[0].meanings.length; i++){
       let meaning = json[0].meanings[i];
