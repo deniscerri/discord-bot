@@ -145,7 +145,7 @@ const clear_queue = (message,queue, server_queue, args) => {
     }
     if(!args[1]){
         server_queue.songs = [];
-        server_queue.connection.dispatcher.end();
+        server_queue.connection.disconnect();
         queue.delete(message.guild.id);
         message.channel.send({content: 'Queue cleared completely!'})
         return;

@@ -1,8 +1,29 @@
 const ytdl = require('ytdl-core');
+const play = require('play-dl');
+
+play.setToken({ useragent: ['Chrome/100']})
+
+play.setToken({
+    spotify: {
+        client_id: process.env.SpotifyClientID,
+        client_secret: process.env.SpotifyClientSecret,
+        refresh_token: process.env.SpotifyRefreshToken,
+        market: 'US'
+    }
+})
+
+play.getFreeClientID().then((clientID) => {
+    play.setToken({
+      soundcloud : {
+          client_id : clientID
+      }
+    })
+})
+
 const ytsc = require('yt-search');
 const ytpl = require('ytpl');
 const Discord = require("discord.js");
-const {joinVoiceChannel, AudioResource, createAudioResource, createAudioPlayer} = require('@discordjs/voice');
+const {joinVoiceChannel, AudioResource, createAudioResource, createAudioPlayer, AudioPlayerStatus} = require('@discordjs/voice');
 const index = require('../../index.js');
 const now_playing = require(`${__dirname}/now_playing.js`);
 
@@ -60,6 +81,7 @@ async function add_to_queue(message, queue, server_queue, songs, voice_ch){
                 adapterCreator: message.guild.voiceAdapterCreator
             })
             queue_constructor.connection = connection;
+            queue_constructor.connection.subscribe(queue_constructor.audioPlayer);
             video_player(message,queue,message.guild, queue_constructor.songs[0])
         }catch(err){
             console.log(err);
@@ -75,22 +97,24 @@ async function add_to_queue(message, queue, server_queue, songs, voice_ch){
     }
 }
 
-async function video_player(message, queue, guild, song){
 
+async function video_player(message, queue, guild, song){
     if(queue == undefined) {return;}
     const server_queue = queue.get(guild.id);
-
     if(!song){
         server_queue.connection.disconnect();
         queue.delete(guild.id);
         return;
     }
+    server_queue.audioPlayer.removeAllListeners('idle');
 
-    const stream = ytdl(song.url, { filter: 'audioonly'});
+    let stream = await getStream(song);
     try{
-        const track = createAudioResource(stream);
-        server_queue.connection.subscribe(server_queue.audioPlayer);
+        const track = createAudioResource(stream.stream, {inlineVolume: true, inputType: stream.type});
+		track.volume.setVolume(1);
         server_queue.audioPlayer.play(track);
+        await now_playing.execute(message , [server_queue, true]);
+
     }catch(err){
         console.log(err);
         message.channel.send({content:'Error playing stream!'});
@@ -98,35 +122,40 @@ async function video_player(message, queue, guild, song){
         server_queue.repeat = false;
         video_player(message, queue, guild, server_queue.songs[0]);
     }
-    server_queue.audioPlayer.on('idle', ()=>{
+    server_queue.audioPlayer.once('idle', () => nextSong(message, queue, guild, server_queue));
+}
+
+function nextSong(message, queue, guild, server_queue){
+    if (!server_queue.repeat){
         server_queue.songs.shift();
-        video_player(message, queue, guild, server_queue.songs[0]);
-    })
-    // .on('finish', ()=> {
-    //     if(!server_queue.repeat){
-    //         server_queue.songs.shift();
-    //      }
-    //      video_player(message, queue, guild, server_queue.songs[0]);
-    // })
+    }
+    video_player(message, queue, guild, server_queue.songs[0]);
+}
 
-
-    // .on('error', () => {
-        
-    // })
-    // .on('finish', () =>{
-        
-    // });
-    await now_playing.execute(message , []);
+async function getStream(song){
+    let stream;
+    switch(song.type){
+        case "youtube":
+            stream = play.stream(song.url)
+            return stream;
+        case "spotify":
+            let searched = await play.search(song.title, {limit: 1})
+            stream = play.stream(searched[0].url)
+            return stream;
+        case "soundcloud":
+            stream = play.stream(song.url)
+            return stream;
+    }
 }
 
 async function search(message, queue, server_queue, voice_ch, args){
     let songs = []; 
-        let song = {};
-        //if its a playlist link
-        try{
-            let checkPlaylist = await ytpl.getPlaylistID(args[0]);
+    let song = {};
+    if(args[0].startsWith("http") && args[0].includes("youtu")){
+        if(args[0].includes("list")){
             message.channel.send({content: '🧐 Searching for playlist: `'+args[0]+'`...'});
-            const results = await ytpl(checkPlaylist, {pages: 1});
+            let checkPlaylist = await ytpl.getPlaylistID(args[0]);
+            const results = await ytpl(checkPlaylist, {limit: Infinity});
             for(var i = 0; i < results.items.length; i++){
                 try{
                     if(results.items[i].isPlayable){
@@ -137,51 +166,116 @@ async function search(message, queue, server_queue, voice_ch, args){
                             requestedBy: message.author.username+'#'+message.author.discriminator,
                             playlist_url: results.url,
                             playlist_title: results.title,
+                            type: 'youtube'
                         }
                         songs.push(song);
                     }
                 }catch(err){
-                    continue;
+                    message.channel.send({content: 'Error parsing youtube playlist!'});
+                    return;
                 }
             }
-            
-        }catch(err){
-            //if its a single youtube url
-            if(ytdl.validateURL(args[0])){
-                message.channel.send({content: '🧐 Searching for: `'+args[0]+'`...'});
+            return songs;
+        }else{
+            message.channel.send({content: '🧐 Searching for: `'+args[0]+'`...'});
+            try{
                 const song_info = await ytdl.getInfo(args[0]);
                 song = {
                     title: song_info.videoDetails.title,
                     url: song_info.videoDetails.video_url, 
                     length_seconds: song_info.videoDetails.lengthSeconds,
-                    requestedBy: message.author.username+'#'+message.author.discriminator
-                }
-               
-                songs.push(song);
-            // if its a search query
-            }else{
-                const finder = async (query) => {
-                    message.channel.send({content: '🧐 Searching for: `'+args.join(' ')+'`...'});
-                    const videoResult = await ytsc(query);
-                    return (videoResult.videos.length > 1) ? videoResult.videos[0] : null
-                }
-
-                const video = await finder(args.join(' '));
-                if(video){
-                    song = {
-                        title: video.title, 
-                        url: video.url, 
-                        length_seconds: video.seconds, 
-                        requestedBy: message.author.username+'#'+message.author.discriminator
-                    };
-                    songs.push(song);
-                }else{
-                    message.channel.send({content: "Error finding video. "});
-                    return;
+                    requestedBy: message.author.username+'#'+message.author.discriminator,
+                    type: 'youtube'
                 }
                 
+                songs.push(song);
+            }catch(err){
+                console.log(err);
+                message.channel.send({content: 'Error parsing youtube link!'});
+                return;
+            }
+
+            return songs;
+        }
+    }
+    if(args[0].startsWith("http") && args[0].includes("spotify")){
+        
+        if (play.is_expired()) {
+            await play.refreshToken()
+        }
+
+        let spotify_data;
+        
+        if(args[0].includes("/track/")){
+            spotify_data = await play.spotify(args[0]);
+            
+            song = {
+                title: spotify_data.name, 
+                url: args[0], 
+                length_seconds: spotify_data.durationInSec, 
+                requestedBy: message.author.username+'#'+message.author.discriminator,
+                type: 'spotify'
+            };
+            songs.push(song);
+        }else if (args[0].includes("/album/") || args[0].includes("/playlist/")){
+            spotify_data = await play.spotify(args[0]);
+            let song_list = spotify_data.fetched_tracks.values();
+            
+            for(let item of song_list){
+                item.forEach(i => {
+                    song = {
+                        title: i.name, 
+                        url: args[0], 
+                        length_seconds: i.durationInSec, 
+                        requestedBy: message.author.username+'#'+message.author.discriminator,
+                        playlist_url: spotify_data.url,
+                        playlist_title: spotify_data.name,
+                        type: 'spotify'
+                    };
+                    songs.push(song);
+                });
             }
         }
+        return songs;
+    }
+    
+    if(args[0].startsWith("http") && args[0].includes("soundcloud")){
+        let soundcloud_data = await play.soundcloud(args[0]);
+        
+        song = {
+            title: soundcloud_data.name, 
+            url: soundcloud_data.permalink, 
+            length_seconds: soundcloud_data.durationInSec, 
+            requestedBy: message.author.username+'#'+message.author.discriminator,
+            type: 'soundcloud'
+        };
+        songs.push(song);
+        return songs;
+    }else{
+        //if its a query
+        message.channel.send({content: '🧐 Searching for: `'+args.join(' ')+'`...'});
+        const finder = async (query) => {
+            const videoResult = await ytsc(query);
+            return (videoResult.videos.length > 1) ? videoResult.videos[0] : null
+        }   
+
+        const video = await finder(args.join(' '));
+        if(video){
+            song = {
+                title: video.title, 
+                url: video.url, 
+                length_seconds: video.seconds, 
+                requestedBy: message.author.username+'#'+message.author.discriminator,
+                type:'youtube'
+            };
+            songs.push(song);
+        }else{
+            message.channel.send({content: "Error finding video. "});
+            return;
+        }
+        
+    }
+
     return songs;
 }
 

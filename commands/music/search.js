@@ -60,7 +60,8 @@ module.exports = {
                                     title: videos[query].title,
                                     url: videos[query].url, 
                                     length_seconds: videos[query].seconds, 
-                                    requestedBy: message.author.username+'#'+message.author.discriminator
+                                    requestedBy: message.author.username+'#'+message.author.discriminator,
+                                    type: 'youtube'
                                 };
                                 songs = [song];
                                 player.add_to_queue(message, queue, server_queue, songs, voice_ch);

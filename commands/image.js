@@ -105,7 +105,7 @@ const costum_google_search = (message, json, search) => {
   var msg = message.channel.send({content: json.items[i].link, components: [row]})
     .then(async function(msg){
       const collector = msg.createMessageComponentCollector({
-        time: 60000
+        time: 600000
       })
       
       collector.on("collect", async (ButtonInteraction) => {

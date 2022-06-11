@@ -1,27 +1,4 @@
-const answers = [
-  "Yes, idiot",
-  "No, you baka",
-  "Definetly",
-  "Absolutely",
-  "Not in a million years",
-  "Honestly i don't care lol",
-  "Fuck you",
-  "Why are you asking me dumb shit",
-  "Don't sass me bitch",
-  "Sure, why not",
-  "If u asked this to a random bot, i can tell you dont have a life",
-  "yes???",
-  "no lmfao",
-  "PAUSE",
-  "Absolutely fucking not",
-  "no???",
-  "That is the dumbest shit i heard all day",
-  "Ow hell naaaaaawwawaaaaaah",
-  "ok, whatever yes",
-  "when you grow a braincell, yes",
-  "ask again when I'm less busy with your mom",
-  "sure, i literally couldn't care less"
-];
+const fs = require('fs');
 
 module.exports = {
 	name: '8ball',
@@ -33,9 +10,11 @@ module.exports = {
       message.channel.send({content: "Where the question at smh!"});
         return;
     }
-    let answer = answers[Math.floor(Math.random()* answers.length)];
-    message.channel.send({content: answer});
-    
 
+    let answerText = fs.readFileSync("./txt/8ball.txt").toString();
+    let answers = answerText.split("\n");
+    let answer = [Math.floor(Math.random()* answers.length)]
+    message.channel.send({content: answer});
+  
 	},
 };
