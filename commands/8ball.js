@@ -13,7 +13,7 @@ module.exports = {
 
     let answerText = fs.readFileSync("./txt/8ball.txt").toString();
     let answers = answerText.split("\n");
-    let answer = [Math.floor(Math.random()* answers.length)]
+    let answer = answers[Math.floor(Math.random() * answers.length)]
     message.channel.send({content: answer});
   
 	},
