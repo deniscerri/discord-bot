@@ -18,9 +18,12 @@
   },
   "homepage": "https://github.com/deniscerri/denisDiscordBot#readme",
   "dependencies": {
+    "@discordjs/builders": "^0.15.0",
     "@discordjs/opus": "^0.5.3",
+    "@discordjs/rest": "^0.5.0",
     "@discordjs/voice": "^0.7.5",
     "axios": "^0.24.0",
+    "discord-api-types": "^0.36.0",
     "discord.js": "^13.3.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",

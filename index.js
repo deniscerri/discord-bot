@@ -22,7 +22,6 @@ for (const file of musicCommandFiles) {
 	client.commands.set(command.name, command);
 }
 
-
 const musicQueue = new Map();
 module.exports.queue = getMusicQueue();
 function getMusicQueue(){
@@ -32,7 +31,7 @@ function getMusicQueue(){
 
 client.once('ready', () => {
     console.log('DenisBot is online!');
-	client.user.setActivity('Ninja Gaiden [NES]',{type: 'PLAYING'});
+	client.user.setActivity('Games!',{type: 'PLAYING'});
 });
 
 
@@ -55,10 +54,6 @@ client.on('messageCreate', message => {
 		message.reply({content: 'there was an error trying to execute that command!'});
 	}
 });
-
-
-
-
 
 keepAlive();
 client.login(process.env['TOKEN']);
