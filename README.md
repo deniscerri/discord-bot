@@ -39,11 +39,24 @@ This bot uses the Discord.js v13 package. To run it, you need to have a node ver
 
 Don't forget to provide your own API Keys in your .env file. All API's used in the bot are free and available for everyone to use.
 
+## What to write on your .env file
+TOKEN= <br>
+moviedb= <br>
+google_search= <br>
+TMDBproxy= <br>
+SpotifyClientID= <br>
+SpotifyClientSecret= <br>
+SpotifyRefreshToken= <br>
+
+
+TMDB proxy is created in cases if the bot is making too many requests to tmdb. You can create your own by using the code at: <br>
+https://tmdb-proxy.deniscerri.repl.co
+
 Apart from the images scraper library, the bot also uses a costum google search api for faster results. You need to create your own at:
 ```
 https://developers.google.com/custom-search/v1/overview
 ```
-
+You can get the Spotify codes by looking through the play-dl documentation.
 
 
 Alot of the bot's commands are powered through REST API calls.
