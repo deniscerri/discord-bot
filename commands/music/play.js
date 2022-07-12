@@ -152,50 +152,66 @@ async function search(message, queue, server_queue, voice_ch, args){
     let songs = []; 
     let song = {};
     if(args[0].startsWith("http") && args[0].includes("youtu")){
-        if(args[0].includes("list")){
-            message.channel.send({content: '🧐 Searching for playlist: `'+args[0]+'`...'});
-            let checkPlaylist = await ytpl.getPlaylistID(args[0]);
-            const results = await ytpl(checkPlaylist, {limit: Infinity});
-            for(var i = 0; i < results.items.length; i++){
+        var isPlaylist = args[0].includes("list");
+        switch(isPlaylist){
+            //is playlist
+            case true:
+                var checkPlaylist = '';
                 try{
-                    if(results.items[i].isPlayable){
-                        let song = {
-                            title: results.items[i].title,
-                            url: results.items[i].shortUrl,
-                            length_seconds: results.items[i].durationSec,
-                            requestedBy: message.author.username+'#'+message.author.discriminator,
-                            playlist_url: results.url,
-                            playlist_title: results.title,
-                            type: 'youtube'
-                        }
-                        songs.push(song);
-                    }
+                    checkPlaylist = await ytpl.getPlaylistID(args[0]);
                 }catch(err){
-                    message.channel.send({content: 'Error parsing youtube playlist!'});
+                    if(err.toString() === "Error: Mixes not supported"){
+                        args[0] = args[0].split("&list=")[0]
+                        isPlaylist = false
+                        break
+                    }else{
+                        message.channel.send({content: `Couldn't parse this playlist link! :/`})
+                        return
+                    }
+                }
+                message.channel.send({content: '🧐 Searching for playlist: `'+args[0]+'`...'});
+                const results = await ytpl(checkPlaylist, {limit: Infinity});
+                for(var i = 0; i < results.items.length; i++){
+                    try{
+                        if(results.items[i].isPlayable){
+                            let song = {
+                                title: results.items[i].title,
+                                url: results.items[i].shortUrl,
+                                length_seconds: results.items[i].durationSec,
+                                requestedBy: message.author.username+'#'+message.author.discriminator,
+                                playlist_url: results.url,
+                                playlist_title: results.title,
+                                type: 'youtube'
+                            }
+                            songs.push(song);
+                        }
+                    }catch(err){
+                        message.channel.send({content: 'Error parsing youtube playlist!'});
+                        return;
+                    }
+                }
+                return songs;
+            // is single video
+            case false:
+                message.channel.send({content: '🧐 Searching for: `'+args[0]+'`...'});
+                try{
+                    const song_info = await ytdl.getInfo(args[0]);
+                    song = {
+                        title: song_info.videoDetails.title,
+                        url: song_info.videoDetails.video_url, 
+                        length_seconds: song_info.videoDetails.lengthSeconds,
+                        requestedBy: message.author.username+'#'+message.author.discriminator,
+                        type: 'youtube'
+                    }
+                    
+                    songs.push(song);
+                }catch(err){
+                    console.log(err);
+                    message.channel.send({content: 'Error parsing youtube link!'});
                     return;
                 }
-            }
-            return songs;
-        }else{
-            message.channel.send({content: '🧐 Searching for: `'+args[0]+'`...'});
-            try{
-                const song_info = await ytdl.getInfo(args[0]);
-                song = {
-                    title: song_info.videoDetails.title,
-                    url: song_info.videoDetails.video_url, 
-                    length_seconds: song_info.videoDetails.lengthSeconds,
-                    requestedBy: message.author.username+'#'+message.author.discriminator,
-                    type: 'youtube'
-                }
-                
-                songs.push(song);
-            }catch(err){
-                console.log(err);
-                message.channel.send({content: 'Error parsing youtube link!'});
-                return;
-            }
 
-            return songs;
+                return songs;
         }
     }
     if(args[0].startsWith("http") && args[0].includes("spotify")){
