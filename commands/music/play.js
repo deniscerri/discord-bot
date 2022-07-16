@@ -56,24 +56,31 @@ module.exports = {
         }
 
         if(!server_queue){
-            server_queue = {
-                voice_channel: voice_ch,
-                text_channel: message.channel,
-                connection: null,
-                audioPlayer: createAudioPlayer(),
-                repeat: false,
-                length_seconds: 0,
-                songs: []
-            }
-    
-            queue.set(message.guild.id, server_queue);
-            server_queue = queue.get(message.guild.id);
+            server_queue = init_queue(message);
         }
 
         let songs = await search(message, queue, server_queue, voice_ch, args);
         if(!songs){return;}
         add_to_queue(message, queue, server_queue, songs, voice_ch);
     },
+}
+
+const init_queue = (message) => {
+    const voice_ch = message.member.voice.channel;
+    const queue = index.queue;
+
+    server_queue = {
+        voice_channel: voice_ch,
+        text_channel: message.channel,
+        connection: null,
+        audioPlayer: createAudioPlayer(),
+        repeat: false,
+        length_seconds: 0,
+        songs: []
+    }    
+
+    queue.set(message.guild.id, server_queue);
+    return queue.get(message.guild.id);
 }
 
 async function add_to_queue(message, queue, server_queue, songs, voice_ch){
@@ -133,6 +140,7 @@ async function video_player(message, queue, guild, song){
 
 function nextSong(message, queue, guild, server_queue){
     if (!server_queue.repeat){
+        server_queue.length_seconds -= server_queue.songs[0].length_seconds
         server_queue.songs.shift();
     }
     video_player(message, queue, guild, server_queue.songs[0]);
@@ -317,7 +325,7 @@ async function search(message, queue, server_queue, voice_ch, args){
 }
 
 
-function convert_length(seconds){
+const convert_length = (seconds) => {
     var length = ''
     
     if (seconds < 3600 && seconds > 0) {
@@ -333,3 +341,5 @@ function convert_length(seconds){
 module.exports.video_player = video_player;
 module.exports.add_to_queue = add_to_queue;
 module.exports.search = search;
+module.exports.init_queue = init_queue;
+module.exports.convert_length = convert_length;

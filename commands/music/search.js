@@ -12,7 +12,11 @@ module.exports = {
         const queue = index.queue;
 
         if(!voice_ch){ return message.channel.send({content: 'You need to be in a audio channel to execute this command!'});}
-        let server_queue = queue.get(message.guild.id);
+        var server_queue = queue.get(message.guild.id);
+
+        if(!server_queue){
+            server_queue = player.init_queue(message);
+        }
 
 
         const finder = async (query) => {
@@ -59,11 +63,13 @@ module.exports = {
                                 let song = {
                                     title: videos[query].title,
                                     url: videos[query].url, 
-                                    length_seconds: videos[query].seconds, 
+                                    length_seconds: videos[query].seconds,
+                                    length: player.convert_length(videos[query].seconds), 
                                     requestedBy: message.author.username+'#'+message.author.discriminator,
                                     type: 'youtube'
                                 };
                                 songs = [song];
+                                server_queue.length_seconds += parseInt(song.length_seconds)
                                 player.add_to_queue(message, queue, server_queue, songs, voice_ch);
                                 server_queue = queue.get(message.guild.id);
                                 msg();
