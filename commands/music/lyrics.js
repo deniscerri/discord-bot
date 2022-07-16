@@ -9,21 +9,28 @@ module.exports = {
 	async execute(message, args) {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
+        var title = ''
+        var author = ''
 
-        if(!voice_ch){ return message.channel.send('You need to be in a audio channel to execute this command!');}
-        const server_queue = queue.get(message.guild.id);
+        if(!args.join(' ')){
+            if(!voice_ch){ return message.channel.send('You need to be in a audio channel to execute this command!');}
+            const server_queue = queue.get(message.guild.id);
 
-        if(!message.guild.me.voice.channel) return message.channel.send('I am not in a voice channel!');
-        
-        if(!(message.guild.me.voice.channel == voice_ch)){
-            return message.channel.send('You need to be in the same audio channel as the bot to show lyrics!');
+            if(!message.guild.me.voice.channel) return message.channel.send('I am not in a voice channel!');
+            
+            if(!(message.guild.me.voice.channel == voice_ch)){
+                return message.channel.send('You need to be in the same audio channel as the bot to show lyrics!');
+            }
+
+            if(!server_queue){ message.channel.send('There are no songs playing!'); return;}
+
+            title = server_queue.songs[0].title;
+        }else{
+            title = args.join(' ');
         }
 
-        if(!server_queue){ message.channel.send('There are no songs playing!'); return;}
-     
-        const author = '';
         // remove words inside ()
-        var title = server_queue.songs[0].title.replace(/ \([\s\S]*?\)/g, '');
+        title = title.replace(/ \([\s\S]*?\)/g, '');
         // remove words inside []
         title = title.replace(/ \[[\s\S]*?\]/g, '');
         
@@ -49,7 +56,7 @@ module.exports = {
 
             let row = new MessageActionRow();
             let msg;
-            var embed = build_lyrics_embed(server_queue, lyrics_arr, 0);
+            var embed = build_lyrics_embed(title, lyrics_arr, 0);
             if(lyrics_arr.length > 1){
                 row.addComponents(next);
                 msg = message.channel.send({embeds: [embed], components: [row]})
@@ -86,14 +93,11 @@ module.exports = {
                             row.addComponents(prev);
                             row.addComponents(next);
                         }
-                        msg.edit({embeds: [build_lyrics_embed(server_queue, lyrics_arr, i)], components: [row]});
+                        msg.edit({embeds: [build_lyrics_embed(title, lyrics_arr, i)], components: [row]});
                     });
     
                     collector.on("end", async (ButtonInteraction) => {
-                        row.components.forEach(element => {
-                            element.setDisabled(true);
-                        });
-                        msg.edit({embeds: [build_lyrics_embed(server_queue, lyrics_arr, i)], components: [row]});
+                        msg.edit({embeds: [build_lyrics_embed(title, lyrics_arr, i)], components: []});
                     })
                 }
             })
@@ -102,10 +106,10 @@ module.exports = {
     }
 }
 
-const build_lyrics_embed = (server_queue, lyrics_arr, i) => {
+const build_lyrics_embed = (title, lyrics_arr, i) => {
     var embed = new Discord.MessageEmbed()
     .setAuthor('DenisBOT', 'https://cdn50.picsart.com/168503106000202.png', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-    .setTitle(`${server_queue.songs[0].title}'s Lyrics!`)
+    .setTitle(`${title}'s Lyrics!`)
     .setColor('#FFFF00')
     .setDescription(lyrics_arr[i])
     return embed;
