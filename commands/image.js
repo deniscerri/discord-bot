@@ -142,6 +142,10 @@ const costum_google_search = (message, json, search) => {
         msg.edit({content: json.items[i%10].link, components: [row]})
         
       })
+
+      collector.on("end", async (ButtonInteraction) => {
+        msg.edit({content: json.items[i%10].link, components: []});
+      })
     })
 }
 
@@ -186,7 +190,7 @@ const fallback_scraper = async (message, search, nr) => {
         });
 
         collector.on("end", (ButtonInteraction) => {
-            msg.edit({content: results[i].url});
+            msg.edit({content: results[i].url, components: []});
         })
       })
 }

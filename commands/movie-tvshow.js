@@ -135,7 +135,7 @@ module.exports = {
                 collector.on("end", async (ButtonInteraction) => {
                     extra_query = `${baseURL}/3/${type}/${media.results[i].id}?api_key=${key}&language=en-US`;
                     currentMedia = await fetchData(extra_query);
-                    msg.edit({embeds: [embed(currentMedia, type, season, episode)]});
+                    msg.edit({embeds: [embed(currentMedia, type, season, episode)], components: []});
                 })
             }
             

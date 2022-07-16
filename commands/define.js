@@ -65,7 +65,7 @@ module.exports = {
           });
 
           collector.on("end", (ButtonInteraction) => {
-              msg.edit({embeds: [embed(json, i)]});
+              msg.edit({embeds: [embed(json, i)], components: []});
           })
           
         }
