@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 const index = require('../../index.js');
 const play = require(`${__dirname}/play.js`);
-
+const queue_functions = require(`${__dirname}/queue.js`)
 
 module.exports = {
 	name: 'playskip',
@@ -32,6 +32,7 @@ module.exports = {
         let songs = await play.search(message, queue, server_queue, voice_ch, args);
         songs.forEach((song, index) => server_queue.songs.splice((index+1), 0, song))
         server_queue.songs.shift();
+        server_queue.length_seconds = queue_functions.recalculate_queue_length(server_queue)
         play.video_player(message, queue, message.guild, server_queue.songs[0]);
 
     }

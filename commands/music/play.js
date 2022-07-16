@@ -42,7 +42,7 @@ module.exports = {
             return message.channel.send({content: 'You need to be in the same audio channel as the bot to play a song!'});
         }
         
-        const server_queue = queue.get(message.guild.id);
+        var server_queue = queue.get(message.guild.id);
         if(!args.length){
             if(server_queue){
                 if(server_queue.audioPlayer._state.status == 'paused'){
@@ -54,6 +54,22 @@ module.exports = {
                 return message.channel.send({content: 'You need to write a song name or link first'});
             }
         }
+
+        if(!server_queue){
+            server_queue = {
+                voice_channel: voice_ch,
+                text_channel: message.channel,
+                connection: null,
+                audioPlayer: createAudioPlayer(),
+                repeat: false,
+                length_seconds: 0,
+                songs: []
+            }
+    
+            queue.set(message.guild.id, server_queue);
+            server_queue = queue.get(message.guild.id);
+        }
+
         let songs = await search(message, queue, server_queue, voice_ch, args);
         if(!songs){return;}
         add_to_queue(message, queue, server_queue, songs, voice_ch);
@@ -61,18 +77,8 @@ module.exports = {
 }
 
 async function add_to_queue(message, queue, server_queue, songs, voice_ch){
-    if(!server_queue){
-        const queue_constructor = {
-            voice_channel: voice_ch,
-            text_channel: message.channel,
-            connection: null,
-            audioPlayer: createAudioPlayer(),
-            repeat: false,
-            songs: []
-        }
-
-        queue.set(message.guild.id, queue_constructor);
-        songs.forEach(song => queue_constructor.songs.push(song))
+    if(server_queue.songs.length == 0){
+        songs.forEach(song => server_queue.songs.push(song))
 
         try{
             let connection = joinVoiceChannel({
@@ -80,9 +86,9 @@ async function add_to_queue(message, queue, server_queue, songs, voice_ch){
                 guildId: message.guild.id,
                 adapterCreator: message.guild.voiceAdapterCreator
             })
-            queue_constructor.connection = connection;
-            queue_constructor.connection.subscribe(queue_constructor.audioPlayer);
-            video_player(message,queue,message.guild, queue_constructor.songs[0])
+            server_queue.connection = connection;
+            server_queue.connection.subscribe(server_queue.audioPlayer);
+            video_player(message,queue,message.guild, server_queue.songs[0])
         }catch(err){
             console.log(err);
             queue.delete(message.guild.id);
@@ -106,8 +112,8 @@ async function video_player(message, queue, guild, song){
         queue.delete(guild.id);
         return;
     }
-    server_queue.audioPlayer.removeAllListeners('idle');
 
+    server_queue.audioPlayer.removeAllListeners('idle');
     let stream = await getStream(song);
     try{
         const track = createAudioResource(stream.stream, {inlineVolume: true, inputType: stream.type});
@@ -178,14 +184,17 @@ async function search(message, queue, server_queue, voice_ch, args){
                                 title: results.items[i].title,
                                 url: results.items[i].shortUrl,
                                 length_seconds: results.items[i].durationSec,
+                                length: convert_length(results.items[i].durationSec),
                                 requestedBy: message.author.username+'#'+message.author.discriminator,
                                 playlist_url: results.url,
                                 playlist_title: results.title,
                                 type: 'youtube'
                             }
                             songs.push(song);
+                            server_queue.length_seconds += parseInt(song.length_seconds)
                         }
                     }catch(err){
+                        console.log(err);
                         message.channel.send({content: 'Error parsing youtube playlist!'});
                         return;
                     }
@@ -200,11 +209,13 @@ async function search(message, queue, server_queue, voice_ch, args){
                         title: song_info.videoDetails.title,
                         url: song_info.videoDetails.video_url, 
                         length_seconds: song_info.videoDetails.lengthSeconds,
+                        length: convert_length(song_info.videoDetails.lengthSeconds),
                         requestedBy: message.author.username+'#'+message.author.discriminator,
                         type: 'youtube'
                     }
                     
                     songs.push(song);
+                    server_queue.length_seconds += parseInt(song.length_seconds)
                 }catch(err){
                     console.log(err);
                     message.channel.send({content: 'Error parsing youtube link!'});
@@ -229,10 +240,14 @@ async function search(message, queue, server_queue, voice_ch, args){
                 title: spotify_data.name, 
                 url: args[0], 
                 length_seconds: spotify_data.durationInSec, 
+                length: convert_length(spotify_data.durationInSec),
                 requestedBy: message.author.username+'#'+message.author.discriminator,
                 type: 'spotify'
             };
             songs.push(song);
+            server_queue.length_seconds += parseInt(song.length_seconds)
+
+
         }else if (args[0].includes("/album/") || args[0].includes("/playlist/")){
             spotify_data = await play.spotify(args[0]);
             let song_list = spotify_data.fetched_tracks.values();
@@ -242,13 +257,15 @@ async function search(message, queue, server_queue, voice_ch, args){
                     song = {
                         title: i.name, 
                         url: args[0], 
-                        length_seconds: i.durationInSec, 
+                        length_seconds: i.durationInSec,
+                        length: convert_length(i.durationInSec),
                         requestedBy: message.author.username+'#'+message.author.discriminator,
                         playlist_url: spotify_data.url,
                         playlist_title: spotify_data.name,
                         type: 'spotify'
                     };
                     songs.push(song);
+                    server_queue.length_seconds += parseInt(song.length_seconds)
                 });
             }
         }
@@ -261,11 +278,13 @@ async function search(message, queue, server_queue, voice_ch, args){
         song = {
             title: soundcloud_data.name, 
             url: soundcloud_data.permalink, 
-            length_seconds: soundcloud_data.durationInSec, 
+            length_seconds: soundcloud_data.durationInSec,
+            length: convert_length(soundcloud_data.durationInSec),
             requestedBy: message.author.username+'#'+message.author.discriminator,
             type: 'soundcloud'
         };
         songs.push(song);
+        server_queue.length_seconds += parseInt(song.length_seconds)
         return songs;
     }else{
         //if its a query
@@ -280,11 +299,13 @@ async function search(message, queue, server_queue, voice_ch, args){
             song = {
                 title: video.title, 
                 url: video.url, 
-                length_seconds: video.seconds, 
+                length_seconds: video.seconds,
+                length: convert_length(video.seconds),
                 requestedBy: message.author.username+'#'+message.author.discriminator,
                 type:'youtube'
             };
             songs.push(song);
+            server_queue.length_seconds += parseInt(song.length_seconds)
         }else{
             message.channel.send({content: "Error finding video. "});
             return;
@@ -293,6 +314,19 @@ async function search(message, queue, server_queue, voice_ch, args){
     }
 
     return songs;
+}
+
+
+function convert_length(seconds){
+    var length = ''
+    
+    if (seconds < 3600 && seconds > 0) {
+        length = new Date(seconds * 1000).toISOString().substring(14, 19)
+    } else if (seconds > 3600) {
+        length = new Date(seconds * 1000).toISOString().substring(11, 19)
+    }
+
+    return length;
 }
 
 

@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const index = require('../../index.js');
 const play = require(`${__dirname}/play.js`);
 const now_playing = require(`${__dirname}/now_playing.js`);
-
+const queue_functions = require(`${__dirname}/queue.js`)
 
 module.exports = {
 	name: 'playtop',
@@ -32,6 +32,8 @@ module.exports = {
 
         let songs = await play.search(message, queue, server_queue, voice_ch, args);
         songs.forEach((song, index) => server_queue.songs.splice((index+1), 0, song))
+
+        server_queue.length_seconds = queue_functions.recalculate_queue_length(server_queue)
         
         if(songs.length > 1){
             return now_playing.added_to_queue(message, server_queue, 'playlist', 1)

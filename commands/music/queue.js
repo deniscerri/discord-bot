@@ -1,5 +1,6 @@
 const index = require('../../index.js');
 const Discord = require("discord.js");
+const {MessageButton, MessageActionRow} = require("discord.js");
 
 module.exports = {
 	name: 'queue',
@@ -17,24 +18,16 @@ module.exports = {
         }
         
         var embeds = [];
-        var limit = 10;
-
-        var lengths = [];
-        var totalLength = 0;
-        for(var i = 0; i < server_queue.songs.length; i++){
-            let length = 0;
-            if(server_queue.songs[i].length_seconds < 3600){
-                length = new Date(server_queue.songs[i].length_seconds * 1000).toISOString().substr(14, 5)
-            }else{
-                length = new Date(server_queue.songs[i].length_seconds * 1000).toISOString().substr(11, 8)
-            }
-            lengths.push(length);
-            totalLength += server_queue.songs[i].length_seconds;
-        }
+        var limit = 10; 
+        
+        //total length of the queue
+        var totalLength = server_queue.length_seconds;
         
         //current playing song streaming time
         let time = server_queue.audioPlayer._state.resource.playbackDuration / 1000 ?? 0;
-        totalLength = totalLength - time;
+        
+        //remaining length 
+        totalLength -= time;
         if(totalLength < 3600){
             totalLength = new Date(totalLength * 1000).toISOString().substr(14, 5)
         }else{
@@ -42,7 +35,7 @@ module.exports = {
         }
 
         for(var i = 0; i < server_queue.songs.length; i+=limit){
-            let tmp_embed = build_queue(server_queue, lengths, message , i, limit);
+            let tmp_embed = build_queue(server_queue, message , i, limit);
             embeds.push(tmp_embed);
         }
         
@@ -67,49 +60,98 @@ module.exports = {
             }
             
         }
-        var msg = message.channel.send({embeds: [embeds[i]]})
-            .then(async function(msg){
-                if(embeds.length > 1){
-                    msg.react('⏭')
-                    await msg.awaitReactions(reaction => {
-                    if(reaction.emoji.reaction.count > 1){
-                        switch(reaction.emoji.name){
-                            case '⏭':
+
+        
+        //navigation buttons
+        let next = new MessageButton()
+        .setCustomId("next")
+        .setLabel("Next")
+        .setStyle("PRIMARY")
+
+        let prev = new MessageButton()
+        .setCustomId("prev")
+        .setLabel("Previous")
+        .setStyle("PRIMARY") 
+
+        let first = new MessageButton()
+        .setCustomId("first")
+        .setLabel("First Page")
+        .setStyle("SECONDARY") 
+
+        let last = new MessageButton()
+        .setCustomId("last")
+        .setLabel("Last Page")
+        .setStyle("SECONDARY") 
+
+        let row = new MessageActionRow();
+        let msg;
+
+        if(embeds.length > 1){
+            row.addComponents(next);
+            if(embeds.length > 2){
+                row.addComponents(last);
+            }
+            msg = message.channel.send({embeds: [embeds[i]], components: [row]})
+        }else{
+            msg = message.channel.send({embeds: [embeds[i]]})
+        }
+
+        msg.then(async function(msg){
+            if(embeds.length > 1){
+                const collector = msg.createMessageComponentCollector({
+                    time: 600000
+                });
+
+                collector.on("collect", async (ButtonInteraction) => {
+                    ButtonInteraction.deferUpdate();
+                    const id = ButtonInteraction.customId;
+                    switch(id){
+                        case 'next':
                             i = ++i % embeds.length;
                             break;
-                            case '⏮':
+                        case 'prev':
                             i = --i % embeds.length;
                             break;
+                        case 'first':
+                            i = 0;
+                            break;
+                        case 'last':
+                            i = embeds.length - 1;
+                            break;
                         }
-                        msg.edit(embeds[i]);
-                        msg.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                        if(i == embeds.length){
-                            msg.react('⏮')
-                        }else if(i == 0){
-                            msg.react('⏭')
-                        }else{
-                            msg.react('⏮')
-                            msg.react('⏭')
-                        }
+                    row = new MessageActionRow();
+                    if(i == embeds.length-1){
+                        row.addComponents(first);
+                        row.addComponents(prev);
+                    }else if(i == 0){
+                        row.addComponents(next);
+                        row.addComponents(last);
+                    }else{
+                        row.addComponents(first);
+                        row.addComponents(prev);
+                        row.addComponents(next);
+                        row.addComponents(last);
                     }
-                    
-                    }, {time: 600000});
-                }
-            })
+                    msg.edit({embeds: [embeds[i]], components: [row]});
+                });
 
+                collector.on("end", async (ButtonInteraction) => {
+                    msg.edit({embeds: [embeds[i]], components: []});
+                })
+            }
+        })
     }
 }
 
 
-const build_queue = (server_queue, lengths, message, index, limit) =>{
-
+const build_queue = (server_queue, message, index, limit) =>{
     var embed = new Discord.MessageEmbed()
         .setAuthor('DenisBOT', 'https://cdn50.picsart.com/168503106000202.png', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
         .setTitle(`${message.guild.name}'s Music Queue!`)
         .setColor('#FFFF00')
     index++;
 
-    let description = `**NOW PLAYING**\n [${server_queue.songs[0].title}](${server_queue.songs[0].url}) | `+'`'+lengths[0]+' Requested by: '+server_queue.songs[0].requestedBy+'`';
+    let description = `**NOW PLAYING**\n [${server_queue.songs[0].title}](${server_queue.songs[0].url}) | `+'`'+server_queue.songs[0].length+' Requested by: '+server_queue.songs[0].requestedBy+'`';
     if(server_queue.connection.dispatcher != null){
         if(server_queue.connection.dispatcher.pausedSince != null && server_queue.connection.dispatcher.pausedSince > 0){
             description+=' ⏸';
@@ -131,7 +173,7 @@ const build_queue = (server_queue, lengths, message, index, limit) =>{
     }
 
     for(var i = index; i < limit;i++){
-        description += '`'+i+'.`' + ` [${server_queue.songs[i].title}](${server_queue.songs[i].url}) | `+'`'+lengths[i]+' Requested by: '+server_queue.songs[i].requestedBy+'`\n';
+        description += '`'+i+'.`' + ` [${server_queue.songs[i].title}](${server_queue.songs[i].url}) | `+'`'+server_queue.songs[i].length+' Requested by: '+server_queue.songs[i].requestedBy+'`\n';
     }
     embed.setDescription(description);
 
@@ -166,8 +208,21 @@ const clear_queue = (message,queue, server_queue, args) => {
     }
     try{
         server_queue.songs.splice(start, end-start+1);
+        server_queue.length_seconds = recalculate_queue_length(server_queue);
         message.channel.send({content: 'Queue cleared!'});
     }catch(err){
+        console.log(err);
         message.channel.send({content: 'Error clearing queue!'});
     }
 }
+
+const recalculate_queue_length = (server_queue) => {
+    var length = 0;
+    for(var i = 0; i < server_queue.songs.length; i++){
+        length += parseInt(server_queue.songs[i].length_seconds);
+    }
+
+    return length;
+};
+
+module.exports.recalculate_queue_length = recalculate_queue_length;

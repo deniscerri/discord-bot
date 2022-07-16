@@ -1,5 +1,6 @@
 const index = require('../../index.js');
 const player = require('./play.js');
+const queue_functions = require(`${__dirname}/queue.js`)
 
 module.exports = {
 	name: 'skip',
@@ -47,5 +48,6 @@ function skip(message,queue, server_queue, args){
     }
     message.channel.send({content: '⏭ Skipping!'})
     server_queue.songs.shift();
+    server_queue.length_seconds = queue_functions.recalculate_queue_length(server_queue)
     player.video_player(message, queue, message.guild, server_queue.songs[0]);
 }
