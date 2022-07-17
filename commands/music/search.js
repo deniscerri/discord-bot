@@ -66,7 +66,7 @@ module.exports = {
                                     length_seconds: videos[query].seconds,
                                     length: player.convert_length(videos[query].seconds), 
                                     requestedBy: message.author.username+'#'+message.author.discriminator,
-                                    type: 'youtube'
+                                    type: 'youtube',
                                 };
                                 songs = [song];
                                 server_queue.length_seconds += parseInt(song.length_seconds)

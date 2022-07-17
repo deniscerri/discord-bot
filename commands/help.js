@@ -5,7 +5,7 @@ const gif = 'https://c.tenor.com/R_mwXHSitkQAAAAC/plank-ed-edd-n-eddy.gif';
 
 module.exports = {
 	name: 'help',
-	description: 'Shows all commands',
+	description: 'Shows the bot\'s commands',
 	execute(message, args) {
         var cmd = '';
         if(args[0] != undefined){
@@ -36,6 +36,7 @@ module.exports = {
 
 const createHelpEmbed = (title, directory) => {
     const commandFiles = fs.readdirSync(directory).filter(file => file.endsWith('.js'));
+    var description = '';
     let commandEmbed = new Discord.MessageEmbed()
         .setAuthor(title)
         .setImage(gif)
@@ -44,10 +45,13 @@ const createHelpEmbed = (title, directory) => {
         const command = require(`${directory}/${file}`);
         let aliases = '';
         if(command.aliases != undefined && command.aliases.length > 0){
-            aliases = `***Aliases***:\n \`${command.aliases.join(', ')}\``
+            aliases = `***Aliases***: \`${command.aliases.join(', ')}\`\n`
         }
-        commandEmbed.addField(command.name.substring(0,1).toUpperCase()+command.name.substring(1), command.description + '\n' + aliases, true)
+        
+        description += `**- ${command.name.substring(0,1).toUpperCase()+command.name.substring(1)}**\n${command.description}\n${aliases}\n`
     }
+
+    commandEmbed.setDescription(description);
                 
     return commandEmbed;
 }

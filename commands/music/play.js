@@ -31,7 +31,7 @@ const now_playing = require(`${__dirname}/now_playing.js`);
 module.exports = {
 	name: 'play',
     aliases: ['p'],
-	description: 'Plays music from youtube',
+	description: 'Play music from a query or video/playlist links from youtube/soundcloud/spotify',
 	async execute(message, args) {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
@@ -111,7 +111,7 @@ async function add_to_queue(message, queue, server_queue, songs, voice_ch){
 }
 
 
-async function video_player(message, queue, guild, song){
+async function video_player(message, queue, guild, song, seek){
     if(queue == undefined) {return;}
     const server_queue = queue.get(guild.id);
     if(!song){
@@ -120,13 +120,21 @@ async function video_player(message, queue, guild, song){
         return;
     }
 
+    if(!seek){
+        seek = 0
+    }
+
+    server_queue.songs[0].seek = seek;
+
     server_queue.audioPlayer.removeAllListeners('idle');
-    let stream = await getStream(song);
+    let stream = await getStream(song, seek);
     try{
         const track = createAudioResource(stream.stream, {inlineVolume: true, inputType: stream.type});
 		track.volume.setVolume(1);
         server_queue.audioPlayer.play(track);
-        await now_playing.execute(message , [server_queue, true]);
+        if(!seek){
+            await now_playing.execute(message , [server_queue, true]);
+        }
 
     }catch(err){
         console.log(err);
@@ -146,18 +154,19 @@ function nextSong(message, queue, guild, server_queue){
     video_player(message, queue, guild, server_queue.songs[0]);
 }
 
-async function getStream(song){
+async function getStream(song, seekInSec){
+    
     let stream;
     switch(song.type){
         case "youtube":
-            stream = play.stream(song.url)
+            stream = play.stream(song.url, {seek: seekInSec})
             return stream;
         case "spotify":
             let searched = await play.search(song.title, {limit: 1})
-            stream = play.stream(searched[0].url)
+            stream = play.stream(searched[0].url, {seek: seekInSec})
             return stream;
         case "soundcloud":
-            stream = play.stream(song.url)
+            stream = play.stream(song.url, {seek: seekInSec})
             return stream;
     }
 }
@@ -166,7 +175,7 @@ async function search(message, queue, server_queue, voice_ch, args){
     let songs = []; 
     let song = {};
     if(args[0].startsWith("http") && args[0].includes("youtu")){
-        var isPlaylist = args[0].includes("list");
+        var isPlaylist = args[0].includes("playlist?list");
         switch(isPlaylist){
             //is playlist
             case true:
@@ -174,14 +183,8 @@ async function search(message, queue, server_queue, voice_ch, args){
                 try{
                     checkPlaylist = await ytpl.getPlaylistID(args[0]);
                 }catch(err){
-                    if(err.toString() === "Error: Mixes not supported"){
-                        args[0] = args[0].split("&list=")[0]
-                        isPlaylist = false
-                        break
-                    }else{
-                        message.channel.send({content: `Couldn't parse this playlist link! :/`})
-                        return
-                    }
+                    message.channel.send({content: `Couldn't parse this link! :/`})
+                    return
                 }
                 message.channel.send({content: '🧐 Searching for playlist: `'+args[0]+'`...'});
                 const results = await ytpl(checkPlaylist, {limit: Infinity});
@@ -210,6 +213,11 @@ async function search(message, queue, server_queue, voice_ch, args){
                 return songs;
             // is single video
             case false:
+                if(args[0].match(/^http?s:\/\/youtu.*\?list=.*/)){
+                    args[0] = args[0].split("?list=")[0]
+                }else if(args[0].match(/^http?s:\/\/youtu.*&list=.*/)){
+                    args[0] = args[0].split("&list=")[0]
+                }
                 message.channel.send({content: '🧐 Searching for: `'+args[0]+'`...'});
                 try{
                     const song_info = await ytdl.getInfo(args[0]);
@@ -343,3 +351,5 @@ module.exports.add_to_queue = add_to_queue;
 module.exports.search = search;
 module.exports.init_queue = init_queue;
 module.exports.convert_length = convert_length;
+module.exports.get_stream = getStream;
+module.exports.next_song = nextSong;

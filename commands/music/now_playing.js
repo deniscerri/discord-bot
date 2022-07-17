@@ -28,6 +28,8 @@ module.exports = {
             
             if (!skipped && (server_queue.audioPlayer._state.status == 'playing' || server_queue.audioPlayer._state.status == 'paused')) {
                 let playbackDuration = server_queue.audioPlayer._state.resource.playbackDuration / 1000 ?? 0;
+                playbackDuration += song.seek ?? 0;
+                
                 let increment = 10;
                 let totalLength = Math.round(song.length_seconds / increment);
                 let progress = Math.round(totalLength / increment);

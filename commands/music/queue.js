@@ -4,8 +4,11 @@ const {MessageButton, MessageActionRow} = require("discord.js");
 
 module.exports = {
 	name: 'queue',
-    aliases: ['wq'],
-	description: 'Shows the Music Queue',
+	description: "Shows the Music Queue. ```Write clear after, to clear the queue.  Examples:\n"+ 
+                "--- queue clear [song index] // to clear only one song\n" +
+                "--- queue clear [first index] [last index] // to clear a range of songs" +
+                "--- queue clear [user] // to clear any song added by that user```",
+    
 	async execute(message, args) {
         const queue = index.queue;
         const server_queue = queue.get(message.guild.id);
@@ -192,6 +195,23 @@ const clear_queue = (message,queue, server_queue, args) => {
         message.channel.send({content: 'Queue cleared completely!'})
         return;
     }
+
+    if(message.mentions.users.first()){
+        let author = message.mentions.users.first();
+        try{
+            server_queue.songs = server_queue.songs.filter(function(song, i){
+                return (song.requestedBy !== author.username+'#'+author.discriminator) || i == 0;
+            });
+            console.log(server_queue.songs);
+            server_queue.length_seconds = recalculate_queue_length(server_queue);
+            message.channel.send({content: `Cleared all songs from user ${author}!`});
+            return;
+        }catch(err){
+            console.log(err);
+            message.channel.send({content: 'Error clearing queue!'});
+        }
+    }
+
     let start = args[1];
     let end = args[1];
     if(args[2]){
@@ -207,9 +227,14 @@ const clear_queue = (message,queue, server_queue, args) => {
         return message.channel.send({content: 'Indexes are out of reach.'});
     }
     try{
+        let deleted = server_queue.songs[start].title;
         server_queue.songs.splice(start, end-start+1);
         server_queue.length_seconds = recalculate_queue_length(server_queue);
-        message.channel.send({content: 'Queue cleared!'});
+        if(start == end){
+            message.channel.send({content: "Removed ``" + `${deleted}`+"`` from the queue!"});
+        }else{
+            mesage.channel.send({content: `Removed all songs from range ${start}-${end}`})
+        }
     }catch(err){
         console.log(err);
         message.channel.send({content: 'Error clearing queue!'});

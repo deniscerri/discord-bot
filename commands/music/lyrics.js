@@ -5,7 +5,7 @@ const {MessageButton, MessageActionRow} = require("discord.js");
 
 module.exports = {
 	name: 'lyrics',
-	description: 'Show lyrics of current playing song',
+	description: 'Show lyrics of current playing song. ```Write a query after the command for a custom result```',
 	async execute(message, args) {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;

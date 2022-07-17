@@ -4,7 +4,7 @@ const queue_functions = require(`${__dirname}/queue.js`)
 
 module.exports = {
 	name: 'skip',
-	description: 'Skips the current playing song',
+	description: 'Skip current playing song. ```Write a number after the command to skip to a certain song in the queue```',
 	async execute(message, args) {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;

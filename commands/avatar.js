@@ -4,7 +4,7 @@ const fetch =  require("axios");
 module.exports = {
 	name: 'avatar',
     aliases: ['profile','pfp','icon'],
-	description: 'Shows Avatar!',
+	description: 'Shows Avatar! ```Write the word \'server\' after the command to show the server avatar instead of the default one```',
 	async execute(message, args) {
         const user = message.mentions.users.first() || message.author;
         var image = undefined;
