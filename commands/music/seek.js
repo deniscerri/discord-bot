@@ -46,6 +46,14 @@ const seekSong = (message, args) => {
 
     let seek = Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
 
+    if(!Number.isInteger(seek)){
+        return message.channel.send({content: "Incorrect input. Try writing it in ``seconds`` or ``minute:seconds`` format!"})
+    }
+
+    if(seek > server_queue.songs[0].length_seconds){
+        return message.channel.send({content: "Couldn't Seek. Number is too high!"})
+    }
+
     message.channel.send({content: `▶ Seeking to ${player.convert_length(seek)}`})
     player.video_player(message, queue, message.guild, server_queue.songs[0], seek);
 

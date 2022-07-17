@@ -46,6 +46,9 @@ const forwardSong = (message, args) => {
 
     let seek = Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
     seek = (server_queue.audioPlayer._state.resource.playbackDuration / 1000 ?? 0) + (server_queue.songs[0].seek ?? 0) + seek;
+    if(!typeof seek == "number" || isNaN(seek)){
+        return message.channel.send({content: "Incorrect input. Try writing it in ``seconds`` or ``minute:seconds`` format!"})
+    }
     
     if(seek > server_queue.songs[0].length_seconds){
         return message.channel.send({content: "Couldn't forward! Forward surpassed song length!"})

@@ -3,20 +3,20 @@ const Discord = require("discord.js");
 
 
 module.exports = {
-	name: 'shuffle',
-	description: 'Shuffles the queue',
-	async execute(message, args) {
+    name: 'shuffle',
+    description: 'Shuffles the queue',
+    async execute(message, args) {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
 
-        if(!voice_ch){ return message.channel.send({content: 'You need to be in a audio channel to execute this command!'});}
+        if (!voice_ch) { return message.channel.send({ content: 'You need to be in a audio channel to execute this command!' }); }
         const server_queue = queue.get(message.guild.id);
 
-        if(!message.guild.me.voice.channel) return message.channel.send({content: 'I am not in a voice channel!'});
-        
-        if(message.guild.me.voice.channel == voice_ch){
-            if(!server_queue) {message.channel.send({content: 'No songs available to shuffle!'}); return;}
-            
+        if (!message.guild.me.voice.channel) return message.channel.send({ content: 'I am not in a voice channel!' });
+
+        if (message.guild.me.voice.channel == voice_ch) {
+            if (!server_queue || server_queue.songs.length <= 1) { message.channel.send({ content: 'No songs available to shuffle!' }); return; }
+
             let current_playing = server_queue.songs[0];
             server_queue.songs.shift();
             server_queue.songs = shuffle(server_queue.songs);
@@ -53,29 +53,29 @@ module.exports = {
 
 
 
-        }else{
-            message.channel.send({content: 'You need to be in the same audio channel as the bot to activate song repeat!'});
+        } else {
+            message.channel.send({ content: 'You need to be in the same audio channel as the bot to activate song repeat!' });
         }
-        
-        
+
+
     }
 }
 
 
 const shuffle = (array) => {
-    let currentIndex = array.length,  randomIndex;
-    
+    let currentIndex = array.length, randomIndex;
+
     // While there remain elements to shuffle.
     while (currentIndex != 0) {
-    
+
         // Pick a remaining element.
         randomIndex = Math.floor(Math.random() * currentIndex);
         currentIndex--;
-    
+
         // And swap it with the current element.
         [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
+            array[randomIndex], array[currentIndex]];
     }
-    
+
     return array;
 }
