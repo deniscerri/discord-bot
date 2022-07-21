@@ -1,14 +1,28 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
+
 const Discord = require("discord.js");
 const fetch =  require("axios");
 
 module.exports = {
+    data: new SlashCommandBuilder()
+	.setName('avatar')
+	.setDescription('Shows Avatar of a user!')
+	.addSubcommand(command =>
+        command
+            .setName('global')
+            .setDescription('global')
+            .addUserOption(option => option.setName('target').setDescription('Select a user').setRequired(true)))
+    .addSubcommand(command =>
+        command
+            .setName('server')
+            .setDescription('server')
+            .addUserOption(option => option.setName('target').setDescription('Select a user').setRequired(true))),
 	name: 'avatar',
     aliases: ['profile','pfp','icon'],
-	description: 'Shows Avatar! ```Write the word \'server\' after the command to show the server avatar instead of the default one```',
-	async execute(message, args) {
-        const user = message.mentions.users.first() || message.author;
+	async execute(message) {
+        const user = message.options._hoistedOptions[0].user
         var image = undefined;
-        if(args[0] == "server"){
+        if(message.options._subcommand == "server"){
             let res = await fetch.get(`https://discord.com/api/guilds/${message.guild.id}/members/${user.id}`, {
                 headers: {
                     Authorization: `Bot ${process.env['TOKEN']}`
@@ -27,6 +41,6 @@ module.exports = {
             .setTitle('URL')
             .setURL(image)
             .setImage(image);
-        message.channel.send({embeds: [avatarEmbed]});
+        message.reply({embeds: [avatarEmbed]});
 	},
 };

@@ -1,5 +1,6 @@
 
 const {MessageButton, MessageActionRow, MessageEmbed } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const fetch = require('node-fetch');
 
 let reddit = [
@@ -25,27 +26,28 @@ let reddit = [
 
 
 module.exports = {
-    name: 'meme',
-    aliases: ['memes','meem','mem'],
-    description: 'Send Memes',
-    async execute(message, args) {
+    data: new SlashCommandBuilder()
+	.setName('meme')
+	.setDescription('Send a meme!')
+    .addStringOption(option => option.setName('subreddit').setDescription('Write a custom subreddit').setRequired(false)),
+	async execute(message) {
+        await message.deferReply();
         let subreddit = '';
-        let random = true;
-        if(args.length == 0){
-            subreddit = reddit[Math.floor(Math.random() * reddit.length)];
-        }else{
-            subreddit = args[0];
-            random = false;
-        }
 
+        try{
+            subreddit = message.options._hoistedOptions[0].value;
+        }catch(err){
+            subreddit = reddit[Math.floor(Math.random() * reddit.length)];
+        }
+    
         var json = await fetchMeme(subreddit);
         
         if(json.data.dist == 0){
-            message.channel.send({content: "Couldn't find subreddit."});
+            message.editReply({content: "Couldn't find subreddit."});
         }else{
             if((json.data.children)[0].data.over_18){
                 if(!message.channel.nsfw){
-                    message.channel.send({content: "This subreddit is NSFW. Send the command in a NSFW Channel!"});
+                    message.editReply({content: "This subreddit is NSFW. Send the command in a NSFW Channel!"});
                     return;
                 }
             }
@@ -64,7 +66,7 @@ module.exports = {
             row.addComponents(switchSub);
             
             var i = -1
-            var msg = message.channel.send({embeds: [buildEmbed(json)], components: [row] })
+            var msg = message.editReply({fetchReply: true, embeds: [buildEmbed(json)], components: [row] })
             .then(async function(msg){
                 const collector = msg.createMessageComponentCollector({
                     time: 600000

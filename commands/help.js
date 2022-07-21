@@ -1,16 +1,24 @@
 const Discord = require('discord.js');
 const fs = require('fs');
 const gif = 'https://c.tenor.com/R_mwXHSitkQAAAAC/plank-ed-edd-n-eddy.gif';
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 
 module.exports = {
-	name: 'help',
-	description: 'Shows the bot\'s commands',
-	execute(message, args) {
-        var cmd = '';
-        if(args[0] != undefined){
-            cmd = args[0].toLowerCase();
-        }
+	data: new SlashCommandBuilder()
+	.setName('help')
+	.setDescription('List all commands!')
+    .addSubcommand(command =>
+        command
+            .setName('default')
+            .setDescription('List all default commands'))
+    .addSubcommand(command =>
+        command
+            .setName('music')
+            .setDescription('List all music commands')),
+	execute(message) {
+        var cmd = message.options._subcommand;
+
         var title = '';
         var directory = '';    
 
@@ -18,7 +26,7 @@ module.exports = {
             title = 'All Music Commands of DenisBot';
             directory = `${__dirname}/music/`;
             
-            return message.channel.send({embeds: [createHelpEmbed(title, directory)]});
+            return message.reply({embeds: [createHelpEmbed(title, directory)]});
         }
 		
         title = 'All Commands of DenisBot';
@@ -26,7 +34,7 @@ module.exports = {
         let embed = createHelpEmbed(title, directory);
         embed.setFooter('Write whelp music, for Music Commands');
             
-        return message.channel.send({embeds: [embed]});
+        return message.reply({embeds: [embed]});
         
 
 
@@ -43,12 +51,7 @@ const createHelpEmbed = (title, directory) => {
     
     for (const file of commandFiles) {
         const command = require(`${directory}/${file}`);
-        let aliases = '';
-        if(command.aliases != undefined && command.aliases.length > 0){
-            aliases = `***Aliases***: \`${command.aliases.join(', ')}\`\n`
-        }
-        
-        description += `**- ${command.name.substring(0,1).toUpperCase()+command.name.substring(1)}**\n${command.description}\n${aliases}\n`
+        description += `** /${command.data.name}**\n${command.data.description}\n`
     }
 
     commandEmbed.setDescription(description);

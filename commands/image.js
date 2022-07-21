@@ -1,5 +1,7 @@
 const Scraper = require('images-scraper');
-const {MessageButton, MessageActionRow, ButtonInteraction} = require('discord.js');
+const {MessageButton, MessageActionRow} = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
+
 const fetch = require('node-fetch');
 
 const minimal_args = [
@@ -66,20 +68,17 @@ const google = new Scraper({
 });
 
 module.exports = {
-  name: 'img',
-  aliases: ['image','images','mg','pic','picture'],
-	description: 'Get random images from the net!',
-	async execute(message, args) {
+  data: new SlashCommandBuilder()
+	.setName('img')
+	.setDescription('Send an image!')
+  .addStringOption(option => option.setName('word').setDescription('Write a word').setRequired(true)),
+	async execute(message) {
     // extract search query from message
-    var search = args.slice(0).join(" ");
+    var search = message.options._hoistedOptions[0].value;
     var nr = 50;
 
-    if(search === ""){
-      message.channel.send({content: "What pic do u want me to search?"});
-      return;
-    }
     let url = `https://www.googleapis.com/customsearch/v1?key=${process.env['google_search']}&safe=medium&searchType=image&q=${search}&start=1`
-    message.channel.send({content: '🔎📷 Searching for: `'+search+'`'});
+    message.reply({content: '🔎📷 Searching for: `'+search+'`'});
     let json = await fetch_json(url);
     if(json.hasOwnProperty('items')){
       costum_google_search(message, json, search);
@@ -102,7 +101,7 @@ const fetch_json = async (url) => {
 const costum_google_search = (message, json, search) => {
   var i = 0;
   let row = new MessageActionRow().addComponents(next, random);
-  var msg = message.channel.send({content: json.items[i].link, components: [row]})
+  var msg = message.channel.send({fetchReply: true, content: json.items[i].link, components: [row]})
     .then(async function(msg){
       const collector = msg.createMessageComponentCollector({
         time: 600000
@@ -155,7 +154,7 @@ const fallback_scraper = async (message, search, nr) => {
   const results = await google.scrape(search,nr);
     let row = new MessageActionRow().addComponents(next,random);
     var i = 0;
-    var msg = message.channel.send({content: results[i].url, components: [row]})
+    var msg = message.channel.send({fetchReply: true, content: results[i].url, components: [row]})
       .then(async function(msg){
         const collector = msg.createMessageComponentCollector({
           time: 600000
