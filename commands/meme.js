@@ -1,28 +1,7 @@
 
 const {MessageButton, MessageActionRow, MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const fetch = require('node-fetch');
-
-let reddit = [
-    "dankruto",
-    "memes",
-    "funny",
-    "animememes",
-    "AdviceAnimals",
-    "dankmemes",
-    "wholesomememes",
-    "meirl",
-    "2meirl4meirl",
-    "comedyheaven",
-    "programmerhumor",
-    "cursedcomments",
-    "blursedimages",
-    "dashcamgifs",
-    "theyknew",
-    "CrappyDesign",
-    "starterpacks"
-]
-
+const index = require('../index.js');
 
 
 module.exports = {
@@ -32,17 +11,21 @@ module.exports = {
     .addStringOption(option => option.setName('subreddit').setDescription('Write a custom subreddit').setRequired(false)),
 	async execute(message) {
         await message.deferReply();
-        let subreddit = '';
+        let meme_storage = index.meme_storage;
+        var subreddit = '', json;
 
         try{
             subreddit = message.options._hoistedOptions[0].value;
+            json = await meme_storage.collection[subreddit]
+            if(json === undefined){
+                json = await meme_storage.get_memes(subreddit);
+            }
         }catch(err){
-            subreddit = reddit[Math.floor(Math.random() * reddit.length)];
+            subreddit = Object.keys(meme_storage.collection)[Math.floor(Math.random() * meme_storage.length)]
+            json = await meme_storage.collection[subreddit]
         }
     
-        var json = await fetchMeme(subreddit);
-        
-        if(json.data.dist == 0){
+        if(json == []){
             message.editReply({content: "Couldn't find subreddit."});
         }else{
             if((json.data.children)[0].data.over_18){
@@ -51,7 +34,16 @@ module.exports = {
                     return;
                 }
             }
+            // if the subreddit is not nsfw but can have nsfw posts
+            // remove if the channel is not nsfw
+            // also get only posts with images
+            json = filterJSON(message, json)
+
             //navigation buttons
+            let previous = new MessageButton()
+            .setCustomId("previous")
+            .setLabel("Previous Meme")
+            .setStyle("PRIMARY")
             let another = new MessageButton()
             .setCustomId("another")
             .setLabel("Another Meme")
@@ -65,9 +57,10 @@ module.exports = {
             row.addComponents(another);
             row.addComponents(switchSub);
             
-            var i = -1
-            var msg = message.editReply({fetchReply: true, embeds: [buildEmbed(json)], components: [row] })
-            .then(async function(msg){
+            var i = 0
+            let embed;
+            var msg = message.editReply({fetchReply: true, embeds: [buildEmbed(json, i)], components: [row] })
+            msg.then(async function(msg){
                 const collector = msg.createMessageComponentCollector({
                     time: 600000
                 });
@@ -75,25 +68,31 @@ module.exports = {
                 collector.on("collect", async (ButtonInteraction) => {
                     ButtonInteraction.deferUpdate();
                     const id = ButtonInteraction.customId;
-                    if(id == 'another'){
-                        row = new MessageActionRow();
-                        row.addComponents(another);
-                        row.addComponents(switchSub);
-
+                    if(id == "previous"){
+                        i--;
+                        i = i % json.data.children.length;
+                        embed = buildEmbed(json, i)
+                    }else if(id == 'another'){
                         i++;
                         i = i % json.data.children.length;
-
-                        msg.edit({embeds: [buildEmbed(json, i)], components: [row]});
+                        embed = buildEmbed(json, i)
                     }else if(id == 'switch'){
                         i=-1
-                        subreddit = reddit[Math.floor(Math.random() * reddit.length)];
-                        json = await fetchMeme(subreddit);
-                        row = new MessageActionRow();
-                        row.addComponents(another);
-                        row.addComponents(switchSub);
-
-                        msg.edit({embeds: [buildEmbed(json, ++i)], components: [row]});
+                        subreddit = Object.keys(meme_storage.collection)[Math.floor(Math.random() * meme_storage.length)]
+                        json = await meme_storage.collection[subreddit]
+                        json = filterJSON(message, json)
+                        embed = buildEmbed(json, ++i)
                     }
+
+                    row = new MessageActionRow();
+                    if(i > 0){
+                        row.addComponents(previous)
+                    }
+                    if(i < json.data.children.length){
+                        row.addComponents(another)
+                    }
+                    row.addComponents(switchSub)
+                    msg.edit({embeds: [embed], components: [row]});
                 });
 
                 collector.on("end", (ButtonInteraction) => {
@@ -105,20 +104,42 @@ module.exports = {
   },
 };
 
-async function fetchMeme(subreddit){
-    let settings = { method: "Get" };
-    var response = await fetch(`https://www.reddit.com/r/${subreddit}.json?sort=hot&limit=100`, settings);
-    let json = await response.json();
-    return json;
+
+function filterJSON(message, json){
+    json.data.children = randomizeMemes(json.data.children)
+    if(message.channel.nsfw){
+        json.data.children = json.data.children.filter(c => {
+            return c.data.post_hint === 'image'
+        })
+        return json
+    }
+
+    json.data.children = json.data.children.filter(c => {
+        return c.data.over_18 == false && c.data.post_hint === 'image'
+    })
+    return json
+}
+
+function randomizeMemes(array){
+    let currentIndex = array.length, randomIndex;
+
+    // While there remain elements to shuffle.
+    while (currentIndex != 0) {
+
+        // Pick a remaining element.
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        // And swap it with the current element.
+        [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex], array[currentIndex]];
+    }
+
+    return array;
 }
 
 function buildEmbed(json, i){
-    json = (json.data.children).filter(function (entry){
-        return entry.data.post_hint === 'image';
-    })
-    var random = Math.floor(Math.random() * (json.length));
-    var thememe = json[random].data;
-            
+    var thememe = json.data.children[i].data;
     let embed = new MessageEmbed()
         .setTitle(thememe.title)
         .setURL(`https://reddit.com${thememe.permalink}`)

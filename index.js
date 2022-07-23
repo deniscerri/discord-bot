@@ -3,6 +3,10 @@ const Discord = require('discord.js');
 const keepAlive = require('./server.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
+const {Meme} = require('./helpers/reddit_memes');
+var meme_helper = new Meme();
+
+
 const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"] });
 client.commands = new Discord.Collection();
 
@@ -30,15 +34,25 @@ client.once('ready', () => {
 	const client_id = client.user.id;
 	const rest = new REST({version: '9'}).setToken(process.env['TOKEN']);
 	(async () => {
+		// add commands
+		console.log('Adding / Commands!')
 		try{
 			await rest.put(
 				Routes.applicationCommands(client_id),
 				{body: commands},
 			);
-			console.log('DenisBot is online!');
 		}catch(err){
 			console.error(err)
 		}
+
+		// init memes
+		console.log('Initializing Memes!')
+		await meme_helper.update_collection()
+		setInterval(async () => {
+			await meme_helper.update_collection()
+		}, 600000)
+
+		console.log('DenisBot is online!');
 	})();
 	client.user.setActivity('Games!',{type: 'PLAYING'});
 });
@@ -63,9 +77,17 @@ client.on('interactionCreate', async interaction => {
 
 const musicQueue = new Map();
 module.exports.queue = getMusicQueue();
+module.exports.meme_storage = getMemeStorage()
+
 function getMusicQueue(){
 	return musicQueue;
 }
+
+function getMemeStorage(){
+	return meme_helper;
+}
+
+
 
 keepAlive();
 client.login(process.env['TOKEN']);
