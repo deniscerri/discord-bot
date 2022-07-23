@@ -1,6 +1,9 @@
 const fs = require('fs');
 const Discord = require('discord.js');
 const keepAlive = require('./server.js');
+const {Meme} = require('./helpers/reddit_memes');
+var meme_helper = new Meme();
+
 
 const {Client, MessageAttachment} = require('discord.js');
 const client = new Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"] });
@@ -22,16 +25,20 @@ for (const file of musicCommandFiles) {
 	client.commands.set(command.name, command);
 }
 
-const musicQueue = new Map();
-module.exports.queue = getMusicQueue();
-function getMusicQueue(){
-	return musicQueue;
-}
-
 
 client.once('ready', () => {
-    console.log('DenisBot is online!');
-	client.user.setActivity('Games!',{type: 'PLAYING'});
+	(async () => {
+		// init memes
+		console.log('Initializing Memes!')
+		await meme_helper.update_collection()
+		setInterval(async () => {
+			await meme_helper.update_collection()
+		}, 600000)
+
+		console.log('DenisBot is online!');
+		client.user.setActivity('Games!',{type: 'PLAYING'});
+	})()
+
 });
 
 
@@ -54,6 +61,18 @@ client.on('messageCreate', message => {
 		message.reply({content: 'there was an error trying to execute that command!'});
 	}
 });
+
+
+
+const musicQueue = new Map();
+module.exports.queue = getMusicQueue();
+module.exports.meme_storage = getMemeStorage()
+function getMusicQueue(){
+	return musicQueue;
+}
+function getMemeStorage(){
+	return meme_helper;
+}
 
 keepAlive();
 client.login(process.env['TOKEN']);
