@@ -7,22 +7,27 @@ module.exports = {
     data: new SlashCommandBuilder()
 	.setName('avatar')
 	.setDescription('Shows Avatar of a user!')
-	.addSubcommand(command =>
-        command
-            .setName('global')
-            .setDescription('global')
-            .addUserOption(option => option.setName('target').setDescription('Select a user').setRequired(true)))
-    .addSubcommand(command =>
-        command
-            .setName('server')
-            .setDescription('server')
-            .addUserOption(option => option.setName('target').setDescription('Select a user').setRequired(true))),
+	.addStringOption(option => 
+        option.setName('type')
+        .setDescription('Choose which type avatar type!')
+        .setRequired(true)
+        .addChoices(
+            { name: 'Server', value: 'server' },
+            { name: 'Global', value: 'global' },
+        )
+    )
+    .addUserOption(option => 
+        option.setName('user')
+        .setDescription('Choose which type avatar type!')
+        .setRequired(false)
+    ),
 	name: 'avatar',
     aliases: ['profile','pfp','icon'],
 	async execute(message) {
-        const user = message.options._hoistedOptions[0].user
+        const user = message.options._hoistedOptions.length == 1 ? message.user : message.options._hoistedOptions[1].user
+        const type = message.options._hoistedOptions[0].value
         var image = undefined;
-        if(message.options._subcommand == "server"){
+        if(type == "server"){
             let res = await fetch.get(`https://discord.com/api/guilds/${message.guild.id}/members/${user.id}`, {
                 headers: {
                     Authorization: `Bot ${process.env['TOKEN']}`

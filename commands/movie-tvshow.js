@@ -1,7 +1,7 @@
 const axios = require('axios');
 const Discord = require("discord.js");
 const key = process.env['moviedb'];
-const baseURL = process.env['TMDBproxy'];
+const proxy = process.env['TMDBproxy'];
 const {MessageButton, MessageActionRow} = require("discord.js");
 const { SlashCommandBuilder } = require('@discordjs/builders');
 
@@ -10,7 +10,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 let next = new MessageButton()
     .setCustomId("next")
     .setLabel("Next")
-    .setStyle("PRIMARY")
+    .setStyle("SUCCESS")
 let prev = new MessageButton()
     .setCustomId("prev")
     .setLabel("Previous")
@@ -18,27 +18,31 @@ let prev = new MessageButton()
 let random = new MessageButton()
     .setCustomId("random")
     .setLabel("Random Result")
-    .setStyle("PRIMARY")  
+    .setStyle("SECONDARY")  
 
 
 module.exports = {
     data: new SlashCommandBuilder()
 	.setName('media')
     .setDescription('Search for movies / tv series!')
-    .addSubcommand(command => 
-        command.setName("movie")
-        .setDescription("Shows latest movies!")
-        .addStringOption(option => option.setName('mov').setDescription('Search for a particular one!').setRequired(false))
+    .addStringOption(option => 
+        option.setName('type')
+        .setDescription('Choose which command category to show!')
+        .setRequired(true)
+        .addChoices(
+            { name: 'Movie', value: 'movie' },
+            { name: 'TV Series', value: 'tv' },
+        )
     )
-    .addSubcommand(subcommand =>
-        subcommand.setName('tv')
-        .setDescription('Shows latest tv series!')
-        .addStringOption(option => option.setName('series').setDescription('Search for a particular one!').setRequired(false))
-    ),
+    .addStringOption(option => option.setName('content').setDescription('Search for a particular one!').setRequired(false)),
     async execute(message){
         await message.deferReply();
-        var query = message.options._hoistedOptions.length == 0 ? null : message.options._hoistedOptions[0].value;
-        var type = message.options._subcommand
+        var type = message.options._hoistedOptions[0].value;
+        var query = message.options._hoistedOptions.length == 1 ? null : message.options._hoistedOptions[1].value;
+        var baseURL = proxy
+        if(!baseURL){
+            baseURL = 'https://api.themoviedb.org'
+        }
 
         if(query){
             if(type == 'movie'){

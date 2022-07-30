@@ -8,7 +8,7 @@ module.exports = {
 	.setDescription('Responds to your stupid questions!!')
 	.addStringOption(option =>
 		option.setName('question')
-			.setDescription('The question')
+			.setDescription('Write a question')
 			.setRequired(true)),
 	execute(message) {
     var question = message.options._hoistedOptions[0].value;

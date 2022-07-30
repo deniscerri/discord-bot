@@ -6,7 +6,7 @@ let url;
 
 module.exports = {
 	data: new SlashCommandBuilder()
-	.setName('definesrs')
+	.setName('dictionary')
 	.setDescription('Define a word, seriously!')
   .addStringOption(option => option.setName('word').setDescription('Write a word').setRequired(true)),
 	async execute(message) {

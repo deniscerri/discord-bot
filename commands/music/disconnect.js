@@ -20,6 +20,7 @@ module.exports = {
             let server_queue = queue.get(message.guild.id);
             server_queue.connection.disconnect();
             queue.delete(message.guild.id);
+            message.reply({content: "Disconnected from Audio Channel!"})
         }else{
             message.reply({content: 'You need to be in the same audio channel as the bot to kick it!'});
         }

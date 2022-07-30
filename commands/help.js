@@ -8,36 +8,28 @@ module.exports = {
 	data: new SlashCommandBuilder()
 	.setName('help')
 	.setDescription('List all commands!')
-    .addSubcommand(command =>
-        command
-            .setName('default')
-            .setDescription('List all default commands'))
-    .addSubcommand(command =>
-        command
-            .setName('music')
-            .setDescription('List all music commands')),
+    .addStringOption(option => 
+        option.setName('type')
+        .setDescription('Choose which command category to show!')
+        .setRequired(true)
+        .addChoices(
+            { name: 'Default', value: 'default' },
+            { name: 'Music', value: 'music' },
+        )
+    ),
 	execute(message) {
-        var cmd = message.options._subcommand;
+        var cmd = message.options._hoistedOptions[0].value;
 
-        var title = '';
-        var directory = '';    
+        var title = 'All Commands of DenisBot';
+        var directory = `${__dirname}/`; 
 
         if(cmd == 'music'){
             title = 'All Music Commands of DenisBot';
             directory = `${__dirname}/music/`;
-            
-            return message.reply({embeds: [createHelpEmbed(title, directory)]});
         }
 		
-        title = 'All Commands of DenisBot';
-        directory = `${__dirname}/`;
-        let embed = createHelpEmbed(title, directory);
-        embed.setFooter('Write whelp music, for Music Commands');
-            
-        return message.reply({embeds: [embed]});
-        
-
-
+        let embed = createHelpEmbed(title, directory);            
+        return message.reply({embeds: [embed], ephemeral: true });
 	},
 };
 
@@ -51,7 +43,13 @@ const createHelpEmbed = (title, directory) => {
     
     for (const file of commandFiles) {
         const command = require(`${directory}/${file}`);
-        description += `** /${command.data.name}**\n${command.data.description}\n`
+        description += `** /${command.data.name}**\t${command.data.description}\n`
+        if(command.data.options.length > 0){
+            for(const option of command.data.options){
+                description += "```\t"+ option.name +": " + option.description + "```"
+            }
+        }
+        description += "\n"
     }
 
     commandEmbed.setDescription(description);
