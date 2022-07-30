@@ -1,39 +1,39 @@
 
 const {MessageButton, MessageActionRow, MessageEmbed } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const index = require('../index.js');
 
 
 module.exports = {
-    name: 'meme',
-    aliases: ['memes','meem','mem'],
-    description: 'Send Memes',
-    async execute(message, args) {
+    data: new SlashCommandBuilder()
+	.setName('meme')
+	.setDescription('Send a meme!')
+    .addStringOption(option => option.setName('subreddit').setDescription('Write a custom subreddit').setRequired(false)),
+	async execute(message) {
+        await message.deferReply();
         let meme_storage = index.meme_storage;
         var subreddit = '', json;
 
-        if(args.length == 0){
-            subreddit = Object.keys(meme_storage.collection)[Math.floor(Math.random() * meme_storage.length)]
-            json = await meme_storage.collection[subreddit]
-        }else{
-            subreddit = args[0];
+        try{
+            subreddit = message.options._hoistedOptions[0].value;
             json = await meme_storage.collection[subreddit]
             if(json === undefined){
                 json = await meme_storage.get_memes(subreddit);
             }
+        }catch(err){
+            subreddit = Object.keys(meme_storage.collection)[Math.floor(Math.random() * meme_storage.length)]
+            json = await meme_storage.collection[subreddit]
         }
-
-        
+    
         if(json == []){
-            message.channel.send({content: "Couldn't find subreddit."});
+            message.editReply({content: "Couldn't find subreddit."});
         }else{
             if((json.data.children)[0].data.over_18){
                 if(!message.channel.nsfw){
-                    message.channel.send({content: "This subreddit is NSFW. Send the command in a NSFW Channel!"});
+                    message.editReply({content: "This subreddit is NSFW. Send the command in a NSFW Channel!"});
                     return;
                 }
             }
-
-
             // if the subreddit is not nsfw but can have nsfw posts
             // remove if the channel is not nsfw
             // also get only posts with images
@@ -59,8 +59,8 @@ module.exports = {
             
             var i = 0
             let embed;
-            var msg = message.channel.send({embeds: [buildEmbed(json, i)], components: [row] })
-            .then(async function(msg){
+            var msg = message.editReply({fetchReply: true, embeds: [buildEmbed(json, i)], components: [row] })
+            msg.then(async function(msg){
                 const collector = msg.createMessageComponentCollector({
                     time: 600000
                 });
@@ -93,7 +93,6 @@ module.exports = {
                     }
                     row.addComponents(switchSub)
                     msg.edit({embeds: [embed], components: [row]});
-
                 });
 
                 collector.on("end", (ButtonInteraction) => {
@@ -104,6 +103,7 @@ module.exports = {
       return;
   },
 };
+
 
 function filterJSON(message, json){
     json.data.children = randomizeMemes(json.data.children)
@@ -137,7 +137,6 @@ function randomizeMemes(array){
 
     return array;
 }
-
 
 function buildEmbed(json, i){
     var thememe = json.data.children[i].data;

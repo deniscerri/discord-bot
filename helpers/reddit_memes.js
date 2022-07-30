@@ -68,4 +68,4 @@ class Meme {
     }
 }
 
-module.exports.Meme = Meme; 
+module.exports.Meme = Meme;

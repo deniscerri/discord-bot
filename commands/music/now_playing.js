@@ -1,16 +1,19 @@
 const index = require('../../index.js');
-const queue_functions = require('./queue.js')
 const Discord = require("discord.js");
-const { MessageButton, MessageActionRow } = require("discord.js");
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 
 module.exports = {
-    name: 'np',
-    description: 'Shows current playing song',
+    data: new SlashCommandBuilder()
+	.setName('np')
+	.setDescription('Shows current playing song'),
     async execute(message, args) {
+        message.deferReply?.();
+        message.deleteReply?.();
+
         const queue = index.queue;
-        const server_queue = args[0] || queue.get(message.guild.id);
-        let skipped = args[1] || false;
+        const server_queue = args === undefined ? queue.get(message.guild.id): args[0];
+        let skipped = args === undefined ? false : args[1];
         if (server_queue) {
             let song = server_queue.songs[0];
             let embed = new Discord.MessageEmbed()

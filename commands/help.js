@@ -1,35 +1,35 @@
 const Discord = require('discord.js');
 const fs = require('fs');
 const gif = 'https://c.tenor.com/R_mwXHSitkQAAAAC/plank-ed-edd-n-eddy.gif';
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 
 module.exports = {
-	name: 'help',
-	description: 'Shows the bot\'s commands',
-	execute(message, args) {
-        var cmd = '';
-        if(args[0] != undefined){
-            cmd = args[0].toLowerCase();
-        }
-        var title = '';
-        var directory = '';    
+	data: new SlashCommandBuilder()
+	.setName('help')
+	.setDescription('List all commands!')
+    .addStringOption(option => 
+        option.setName('type')
+        .setDescription('Choose which command category to show!')
+        .setRequired(true)
+        .addChoices(
+            { name: 'Default', value: 'default' },
+            { name: 'Music', value: 'music' },
+        )
+    ),
+	execute(message) {
+        var cmd = message.options._hoistedOptions[0].value;
+
+        var title = 'All Commands of DenisBot';
+        var directory = `${__dirname}/`; 
 
         if(cmd == 'music'){
             title = 'All Music Commands of DenisBot';
             directory = `${__dirname}/music/`;
-            
-            return message.channel.send({embeds: [createHelpEmbed(title, directory)]});
         }
 		
-        title = 'All Commands of DenisBot';
-        directory = `${__dirname}/`;
-        let embed = createHelpEmbed(title, directory);
-        embed.setFooter('Write whelp music, for Music Commands');
-            
-        return message.channel.send({embeds: [embed]});
-        
-
-
+        let embed = createHelpEmbed(title, directory);            
+        return message.reply({embeds: [embed], ephemeral: true });
 	},
 };
 
@@ -43,12 +43,13 @@ const createHelpEmbed = (title, directory) => {
     
     for (const file of commandFiles) {
         const command = require(`${directory}/${file}`);
-        let aliases = '';
-        if(command.aliases != undefined && command.aliases.length > 0){
-            aliases = `***Aliases***: \`${command.aliases.join(', ')}\`\n`
+        description += `** /${command.data.name}**\t${command.data.description}\n`
+        if(command.data.options.length > 0){
+            for(const option of command.data.options){
+                description += "```\t"+ option.name +": " + option.description + "```"
+            }
         }
-        
-        description += `**- ${command.name.substring(0,1).toUpperCase()+command.name.substring(1)}**\n${command.description}\n${aliases}\n`
+        description += "\n"
     }
 
     commandEmbed.setDescription(description);

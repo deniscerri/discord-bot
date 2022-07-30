@@ -1,8 +1,10 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 module.exports = {
-	name: 'ping',
-	description: 'Ping!',
-	execute(message, args) {
-		var ping = Date.now() - message.createdTimestamp + " ms";
-    	message.channel.send({content: 'Pong :ping_pong: '+ `**${ping}**`});
+	data: new SlashCommandBuilder()
+	.setName('ping')
+	.setDescription('Pong!'),
+	execute(message) {
+		var ping = Date.now() - message.createdAt + " ms";
+    	message.reply({content: 'Pong :ping_pong: '+ `**${ping}**`});
 	},
 };

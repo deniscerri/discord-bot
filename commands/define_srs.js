@@ -1,23 +1,21 @@
 const fetch = require('node-fetch');
 const { MessageEmbed } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 let url;
 
 module.exports = {
-	name: 'definesrs',
-    aliases: ['defsrs','defser','defs', 'dic'],
-	description: 'Gives definition of said word, seriously!',
-	async execute(message, args) {
-        var question = args.slice(0).join(" ");
-        url = `https://api.dictionaryapi.dev/api/v2/entries/en/${question}`;
-        if(question === ''){
-        return message.channel.send({content: "Write a word you need the definition for!"})
-        }
+	data: new SlashCommandBuilder()
+	.setName('dictionary')
+	.setDescription('Define a word, seriously!')
+  .addStringOption(option => option.setName('word').setDescription('Write a word').setRequired(true)),
+	async execute(message) {
+    await message.deferReply();
+      var question = message.options._hoistedOptions[0].value;
 
-        var json = await fetchDefinitions();
-        message.channel.send({embeds: [embed(json, message)]});
-
-        return;
+      url = `https://api.dictionaryapi.dev/api/v2/entries/en/${question}`;
+      var json = await fetchDefinitions();
+      message.editReply({embeds: [embed(json, message)]});
 	},
 
 };

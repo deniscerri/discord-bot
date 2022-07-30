@@ -1,24 +1,95 @@
 const index = require('../../index.js');
 const Discord = require("discord.js");
 const {MessageButton, MessageActionRow} = require("discord.js");
+const { SlashCommandBuilder } = require('@discordjs/builders');
+        
+//navigation buttons
+let next = new MessageButton()
+.setCustomId("next")
+.setLabel("Next")
+.setStyle("PRIMARY")
+
+let prev = new MessageButton()
+.setCustomId("prev")
+.setLabel("Previous")
+.setStyle("PRIMARY") 
+
+let first = new MessageButton()
+.setCustomId("first")
+.setLabel("First Page")
+.setStyle("SECONDARY") 
+
+let last = new MessageButton()
+.setCustomId("last")
+.setLabel("Last Page")
+.setStyle("SECONDARY") 
+
 
 module.exports = {
-	name: 'queue',
-	description: "Shows the Music Queue. ```Write clear after, to clear the queue.  Examples:\n"+ 
-                "--- queue clear [song index] // to clear only one song\n" +
-                "--- queue clear [first index] [last index] // to clear a range of songs" +
-                "--- queue clear [user] // to clear any song added by that user```",
-    
-	async execute(message, args) {
+    data: new SlashCommandBuilder()
+	.setName('queue')
+	.setDescription('Show the Music Queue.')
+    .addSubcommand(comm =>
+        comm.setName('list')
+                .setDescription('List elements in the queue')
+                .addStringOption(option =>
+                    option.setName('page')
+                    .setDescription('Write the page number!')
+                    .setRequired(false)
+                )
+    )
+    .addSubcommandGroup(group =>
+        group.setName('clear')
+        .setDescription('Clear elements from the queue')
+        .addSubcommand(comm =>
+            comm.setName('all')
+                .setDescription('Clear all elements from the queue')
+        )
+        .addSubcommand(comm =>
+            comm.setName('one')
+                .setDescription('Clear one from the queue')
+                .addStringOption(option =>
+                    option.setName('index')
+                    .setDescription('Write the song index from the queue!')
+                    .setRequired(true)
+                )
+        )
+        .addSubcommand(comm =>
+            comm.setName('multiple')
+                .setDescription('Clear a range of songs from the queue')
+                .addStringOption(option =>
+                    option.setName('first-index')
+                    .setDescription('Write the first song index from where the deletion starts!')
+                    .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option.setName('last-index')
+                    .setDescription('Write the last song index you want to delete!')
+                    .setRequired(true)
+                )
+            )
+        .addSubcommand(comm =>
+            comm.setName('user')
+                .setDescription('Clear all songs from a user')
+                .addUserOption(option =>
+                    option.setName('target')
+                    .setDescription('Select a user')
+                    .setRequired(true)),
+        )
+    ),
+	async execute(message) {
         const queue = index.queue;
         const server_queue = queue.get(message.guild.id);
         
-        if(!server_queue) return message.channel.send({content: 'There are no songs in the queue!'});
+        if(!server_queue) return message.reply({content: 'There are no songs in the queue!'});
 
-        if(args[0] == 'clear'){
-            clear_queue(message,queue, server_queue, args);
+        if(message.options._group == 'clear'){
+            clear_queue(message,queue, server_queue);
             return;
         }
+
+        message.deferReply();
+        message.deleteReply();
         
         var embeds = [];
         var limit = 10; 
@@ -49,42 +120,22 @@ module.exports = {
         });
 
         var i = 0;
-        let query = parseInt(args[0]);
-        if(Number.isInteger(query)){
-            if(query <= embeds.length){
-                i = query % (embeds.length+1);
-                if(i >= 1){
-                    i--;
+        if(message.options._hoistedOptions.length != 0){
+            let query = parseInt(message.options._hoistedOptions[0].value);
+            if(Number.isInteger(query)){
+                if(query <= embeds.length){
+                    i = query % (embeds.length+1);
+                    if(i >= 1){
+                        i--;
+                    }
+                }else{
+                    let plural_page = (embeds.length == 1) ? 'page' : 'pages';
+                    message.reply({content: 'There are only '+embeds.length+' '+plural_page+' in the queue!'});
+                    return;
                 }
-            }else{
-                let plural_page = (embeds.length == 1) ? 'page' : 'pages';
-                message.channel.send({content: 'There are only '+embeds.length+' '+plural_page+' in the queue!'});
-                return;
+                
             }
-            
         }
-
-        
-        //navigation buttons
-        let next = new MessageButton()
-        .setCustomId("next")
-        .setLabel("Next")
-        .setStyle("PRIMARY")
-
-        let prev = new MessageButton()
-        .setCustomId("prev")
-        .setLabel("Previous")
-        .setStyle("PRIMARY") 
-
-        let first = new MessageButton()
-        .setCustomId("first")
-        .setLabel("First Page")
-        .setStyle("SECONDARY") 
-
-        let last = new MessageButton()
-        .setCustomId("last")
-        .setLabel("Last Page")
-        .setStyle("SECONDARY") 
 
         let row = new MessageActionRow();
         let msg;
@@ -94,9 +145,9 @@ module.exports = {
             if(embeds.length > 2){
                 row.addComponents(last);
             }
-            msg = message.channel.send({embeds: [embeds[i]], components: [row]})
+            msg = message.channel.send({fetchReply: true, embeds: [embeds[i]], components: [row]})
         }else{
-            msg = message.channel.send({embeds: [embeds[i]]})
+            msg = message.channel.send({fetchReply: true, embeds: [embeds[i]]})
         }
 
         msg.then(async function(msg){
@@ -183,61 +234,65 @@ const build_queue = (server_queue, message, index, limit) =>{
     return embed;
 }
 
-const clear_queue = (message,queue, server_queue, args) => {
+const clear_queue = (message,queue, server_queue) => {
     const voice_ch = message.member.voice.channel;
     if(!(message.guild.me.voice.channel == voice_ch)){
-        return message.channel.send({content: 'You need to be in the same audio channel as the bot to clear the queue!'});
+        return message.reply({content: 'You need to be in the same audio channel as the bot to clear the queue!'});
     }
-    if(!args[1]){
-        server_queue.songs = [];
-        server_queue.connection.disconnect();
-        queue.delete(message.guild.id);
-        message.channel.send({content: 'Queue cleared completely!'})
+    if(message.options._subcommand == 'all'){
+        server_queue.songs = [server_queue.songs[0]]
+        message.reply({content: 'Queue cleared completely!'})
         return;
     }
 
-    if(message.mentions.users.first()){
-        let author = message.mentions.users.first();
+    if(message.options._subcommand == 'user'){
+        let author = message.options._hoistedOptions[0].user
         try{
             server_queue.songs = server_queue.songs.filter(function(song, i){
                 return (song.requestedBy !== author.username+'#'+author.discriminator) || i == 0;
             });
-            console.log(server_queue.songs);
             server_queue.length_seconds = recalculate_queue_length(server_queue);
-            message.channel.send({content: `Cleared all songs from user ${author}!`});
+            message.reply({content: `Cleared all songs from user ${author}!`});
             return;
         }catch(err){
             console.log(err);
-            message.channel.send({content: 'Error clearing queue!'});
+            message.reply({content: 'Error clearing queue!'});
         }
     }
 
-    let start = args[1];
-    let end = args[1];
-    if(args[2]){
-        end = args[2];
+    let start = null
+    let end = null
+
+    if(message.options._subcommand == 'one'){
+        start = message.options._hoistedOptions[0].value
+        end = message.options._hoistedOptions[0].value
     }
+    if(message.options._subcommand == 'multiple'){
+        start = message.options._hoistedOptions[0].value
+        end = message.options._hoistedOptions[1].value
+    }
+
     start = parseInt(start);
     end = parseInt(end);
     if(!(Number.isInteger(start) && Number.isInteger(end))){
-        return message.channel.send({content: 'Add only numbers as indexes!'});
+        return message.reply({content: 'Add only numbers as indexes!'});
     }
     let limit = server_queue.songs.length;
     if((start < 0 || start == 0 || start > limit) || (end < 0 || end == 0 || end > limit) || end < start){
-        return message.channel.send({content: 'Indexes are out of reach.'});
+        return message.reply({content: 'Indexes are out of reach.'});
     }
     try{
         let deleted = server_queue.songs[start].title;
         server_queue.songs.splice(start, end-start+1);
         server_queue.length_seconds = recalculate_queue_length(server_queue);
         if(start == end){
-            message.channel.send({content: "Removed ``" + `${deleted}`+"`` from the queue!"});
+            message.reply({content: "Removed ``" + `${deleted}`+"`` from the queue!"});
         }else{
-            mesage.channel.send({content: `Removed all songs from range ${start}-${end}`})
+            message.reply({content: `Removed all songs from range ${start}-${end}`})
         }
     }catch(err){
         console.log(err);
-        message.channel.send({content: 'Error clearing queue!'});
+        message.reply({content: 'Error clearing queue!'});
     }
 }
 

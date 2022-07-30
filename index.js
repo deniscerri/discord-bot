@@ -1,33 +1,50 @@
 const fs = require('fs');
 const Discord = require('discord.js');
 const keepAlive = require('./server.js');
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
 const {Meme} = require('./helpers/reddit_memes');
 var meme_helper = new Meme();
 
 
-const {Client, MessageAttachment} = require('discord.js');
-const client = new Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"] });
+const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"] });
 client.commands = new Discord.Collection();
 
-const prefix = 'w';
+const commands = []
 
 
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const musicCommandFiles = fs.readdirSync('./commands/music').filter(file => file.endsWith('.js'));
 
+
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
-	client.commands.set(command.name, command);
+	commands.push(command.data.toJSON());
+	client.commands.set(command.data.name, command);
 }
 
 for (const file of musicCommandFiles) {
 	const command = require(`./commands/music/${file}`);
-	client.commands.set(command.name, command);
+	commands.push(command.data.toJSON());
+	client.commands.set(command.data.name, command);
 }
 
 
 client.once('ready', () => {
+	const client_id = client.user.id;
+	const rest = new REST({version: '9'}).setToken(process.env['TOKEN']);
 	(async () => {
+		// add commands
+		console.log('Adding / Commands!')
+		try{
+			await rest.put(
+				Routes.applicationCommands(client_id),
+				{body: commands},
+			);
+		}catch(err){
+			console.error(err)
+		}
+
 		// init memes
 		console.log('Initializing Memes!')
 		await meme_helper.update_collection()
@@ -36,29 +53,23 @@ client.once('ready', () => {
 		}, 600000)
 
 		console.log('DenisBot is online!');
-		client.user.setActivity('Games!',{type: 'PLAYING'});
-	})()
-
+	})();
+	client.user.setActivity('Games!',{type: 'PLAYING'});
 });
 
-
-client.on('messageCreate', message => {
-	if (!(message.content.toLowerCase()).startsWith(prefix) || message.author.bot) return;
-
-	const args = message.content.slice(prefix.length).trim().split(/ +/);
+client.on('interactionCreate', async interaction => {
+	if (!interaction.isCommand()) return;
 	
-  	const commandName = args.shift().toLowerCase();
-
-	const command = client.commands.get(commandName)
+	const command = client.commands.get(interaction.commandName)
 		|| client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
 	if (!command) return;
 
 	try {
-		command.execute(message, args);
+		await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
-		message.reply({content: 'there was an error trying to execute that command!'});
+		interaction.reply({content: 'there was an error trying to execute that command!'});
 	}
 });
 
@@ -67,12 +78,16 @@ client.on('messageCreate', message => {
 const musicQueue = new Map();
 module.exports.queue = getMusicQueue();
 module.exports.meme_storage = getMemeStorage()
+
 function getMusicQueue(){
 	return musicQueue;
 }
+
 function getMemeStorage(){
 	return meme_helper;
 }
+
+
 
 keepAlive();
 client.login(process.env['TOKEN']);

@@ -2,30 +2,39 @@ const Discord = require("discord.js");
 const ytsc = require('yt-search');
 const player = require(`${__dirname}/play.js`);
 const index = require('../../index.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 
 module.exports = {
-	name: 'psearch',
-	description: 'Searches a song from youtube to play!',
-	async execute(message, args) {
+	data: new SlashCommandBuilder()
+	.setName('playsearch')
+	.setDescription('Searches for a song from youtube to play.')
+    .addStringOption(option =>
+		option.setName('query')
+			.setDescription('Write a query or link')
+			.setRequired(true)),
+	async execute(message) {
+
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
 
-        if(!voice_ch){ return message.channel.send({content: 'You need to be in a audio channel to execute this command!'});}
+        if(!voice_ch){ return message.reply({content: 'You need to be in a audio channel to execute this command!'});}
         var server_queue = queue.get(message.guild.id);
 
         if(!server_queue){
             server_queue = player.init_queue(message);
         }
 
+        let args = message.options._hoistedOptions[0].value
 
         const finder = async (query) => {
-            message.channel.send({content: '🧐 Searching for: `'+args.join(' ')+'`...'});
             const videoResult = await ytsc(query);
             return (videoResult.videos.length > 1) ? videoResult.videos : null
         }
+        var authorId = message.user.id
+        var messg = await message.reply({fetchReply: true, content: '🧐 Searching for: `'+args+'`...'});
+        const videos = await finder(args);
 
-        const videos = await finder(args.join(' '));
         if(videos){
             let embed = new Discord.MessageEmbed()
                 .setTitle('🔎 Search Results: [Write one of the numbers shown]')
@@ -45,14 +54,13 @@ module.exports = {
             }
 
             embed.setDescription(desc);
-            let filter = m => m.author.id === message.author.id
+            let filter = m => m.author.id === authorId
             
-            message.channel.send({embeds: [embed]}).then(()=>{
+            messg.channel.send({embeds: [embed]}).then(()=>{
                 msg();
                 function msg (){
-                    const collector = message.channel.createMessageCollector({filter, max: 1, time: 30000});
+                    const collector = messg.channel.createMessageCollector({filter, max: 1, time: 30000});
                     collector.on('collect', message => {
-                        
                         if(message == undefined){
                             return;
                         }
@@ -74,7 +82,7 @@ module.exports = {
                                 server_queue = queue.get(message.guild.id);
                                 msg();
                             }else{
-                                message.channel.send({content: 'There are only '+(limit)+' search results!'});
+                                messg.channel.send({content: 'There are only '+(limit)+' search results!'});
                                 msg();
                             }
                         }
@@ -84,7 +92,7 @@ module.exports = {
             })
             
         }else{
-            message.channel.send({content: "Error finding video. "});
+            messg.channel.send({content: "Error finding video. "});
             return;
         }
     }

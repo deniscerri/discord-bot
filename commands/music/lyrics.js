@@ -2,40 +2,48 @@ const Discord = require("discord.js");
 const lyricsParse = require('lyrics-parse');
 const index = require('../../index.js');
 const {MessageButton, MessageActionRow} = require("discord.js");
+const { SlashCommandBuilder } = require('@discordjs/builders');
+
 
 module.exports = {
-	name: 'lyrics',
-	description: 'Show lyrics of current playing song. ```Write a query after the command for a custom result```',
-	async execute(message, args) {
+    data: new SlashCommandBuilder()
+	.setName('lyrics')
+	.setDescription('Show lyrics of current playing song.')
+    .addStringOption(option =>
+		option.setName('query')
+			.setDescription('Write a custom title for a custom lyrics!')
+			.setRequired(false)),
+	async execute(message) {
+        await message.deferReply();
+
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
         var title = ''
         var author = ''
-
-        if(!args.join(' ')){
-            if(!voice_ch){ return message.channel.send('You need to be in a audio channel to execute this command!');}
+        if(message.options._hoistedOptions.length == 0){
+            if(!voice_ch){ return message.editReply('You need to be in a audio channel to execute this command!');}
             const server_queue = queue.get(message.guild.id);
 
-            if(!message.guild.me.voice.channel) return message.channel.send('I am not in a voice channel!');
+            if(!message.guild.me.voice.channel) return message.editReply('I am not in a voice channel!');
             
             if(!(message.guild.me.voice.channel == voice_ch)){
-                return message.channel.send('You need to be in the same audio channel as the bot to show lyrics!');
+                return message.editReply('You need to be in the same audio channel as the bot to show lyrics!');
             }
 
-            if(!server_queue){ message.channel.send('There are no songs playing!'); return;}
+            if(!server_queue){ message.editReply('There are no songs playing!'); return;}
 
             title = server_queue.songs[0].title;
         }else{
-            title = args.join(' ');
+            title = message.options._hoistedOptions[0].value;
         }
 
         // remove words inside ()
         title = title.replace(/ \([\s\S]*?\)/g, '');
         // remove words inside []
         title = title.replace(/ \[[\s\S]*?\]/g, '');
-        
-        let lyrics = await lyricsParse(title, author);
-        if(!lyrics) message.channel.send('No lyrics found! :(')
+       
+        var lyrics = await lyricsParse(title, author);
+        if(!lyrics) message.editReply('No lyrics found! :(')
         else{
             let lyrics_arr = [];
             while(lyrics.length > 4000){
@@ -59,15 +67,15 @@ module.exports = {
             var embed = build_lyrics_embed(title, lyrics_arr, 0);
             if(lyrics_arr.length > 1){
                 row.addComponents(next);
-                msg = message.channel.send({embeds: [embed], components: [row]})
+                msg = await message.editReply({fetchReply: true, embeds: [embed], components: [row]})
             }else{
-                msg = message.channel.send({embeds: [embed]})
+                msg = await message.editReply({fetchReply: true, embeds: [embed]})
             }
        
 
 
             var i = 0;
-            msg.then(async function(msg){
+            (async (msg) => {
                 if(lyrics_arr.length > 1){
                     const collector = msg.createMessageComponentCollector({
                         time: 600000
@@ -100,7 +108,7 @@ module.exports = {
                         msg.edit({embeds: [build_lyrics_embed(title, lyrics_arr, i)], components: []});
                     })
                 }
-            })
+            })(msg);
 
         }
     }

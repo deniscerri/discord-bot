@@ -1,14 +1,14 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const fs = require('fs');
+const path = require("path")
 
 module.exports = {
-	name: 'topic',
-	description: 'Sends a random topic!',
-	execute(message, args) {
-    
-    var topicText = fs.readFileSync("./txt/topic.txt").toString();
+	data: new SlashCommandBuilder()
+	.setName('topic')
+	.setDescription('Send a topic!'),
+	execute(message) {
+    var topicText = fs.readFileSync(path.resolve(__dirname, "../txt/topic.txt")).toString();
     var topic = topicText.split("\n");
-
-		message.channel.send({content:topic[Math.floor(Math.random() * topic.length)]});
-    
+	message.reply({content:topic[Math.floor(Math.random() * topic.length)]});
 	},
 };

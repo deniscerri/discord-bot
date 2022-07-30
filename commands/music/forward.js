@@ -1,33 +1,39 @@
 const index = require('../../index.js');
 const player = require(`${__dirname}/play.js`);
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 
 
 module.exports = {
-	name: 'forward',
-	description: 'Move up certain seconds in the song',
-	async execute(message, args) {
+    data: new SlashCommandBuilder()
+	.setName('forward')
+	.setDescription('Forward up certain seconds in the song')
+    .addStringOption(option =>
+		option.setName('timestamp')
+			.setDescription('Write in [hh:mm:ss] / [mm:ss] / or [ss] format')
+			.setRequired(true)),
+	async execute(message) {
         const voice_ch = message.member.voice.channel;
 
-        if(!voice_ch){ return message.channel.send({content: 'You need to be in a audio channel to execute this command!'});}
-        if(!message.guild.me.voice.channel) return message.channel.send({content: 'I am not in a voice channel!'});
+        if(!voice_ch){ return message.reply({content: 'You need to be in a audio channel to execute this command!'});}
+        if(!message.guild.me.voice.channel) return message.reply({content: 'I am not in a voice channel!'});
         
         if(message.guild.me.voice.channel == voice_ch){
-            forwardSong(message, args);
+            await forwardSong(message);
         }else{
-            message.channel.send({content: 'You need to be in the same audio channel as the bot to kick it!'});
+            message.reply({content: 'You need to be in the same audio channel as the bot to kick it!'});
         }
 
     }
 }
 
 
-const forwardSong = (message, args) => {
+const forwardSong = async (message) => {
     const queue = index.queue;
     const server_queue = queue.get(message.guild.id);
 
     var hours = 0, minutes = 0, seconds = 0;
-    var elements = args[0].split(':');
+    var elements = message.options._hoistedOptions[0].value.split(':');
 
     switch(elements.length){
         case 1:
@@ -47,14 +53,14 @@ const forwardSong = (message, args) => {
     let seek = Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
     seek = (server_queue.audioPlayer._state.resource.playbackDuration / 1000 ?? 0) + (server_queue.songs[0].seek ?? 0) + seek;
     if(!typeof seek == "number" || isNaN(seek)){
-        return message.channel.send({content: "Incorrect input. Try writing it in ``seconds`` or ``minute:seconds`` format!"})
+        return message.reply({content: "Incorrect input. Write in [hh:mm:ss] / [mm:ss] / or [ss] format!"})
     }
     
     if(seek > server_queue.songs[0].length_seconds){
-        return message.channel.send({content: "Couldn't forward! Forward surpassed song length!"})
+        return message.reply({content: "Couldn't forward! Forward surpassed song length!"})
     }
     
-    message.channel.send({content: `⏩ Forwading to ${player.convert_length(seek)}`})
-    player.video_player(message, queue, message.guild, server_queue.songs[0], seek);
+    let msg = await message.reply({fetchReply: true, content: `⏩ Forwading to ${player.convert_length(seek)}`})
+    player.video_player(msg, queue, message.guild, server_queue.songs[0], seek);
 
 }

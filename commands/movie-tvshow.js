@@ -1,15 +1,16 @@
 const axios = require('axios');
 const Discord = require("discord.js");
 const key = process.env['moviedb'];
-const baseURL = process.env['TMDBproxy'];
+const proxy = process.env['TMDBproxy'];
 const {MessageButton, MessageActionRow} = require("discord.js");
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 
 //navigation buttons
 let next = new MessageButton()
     .setCustomId("next")
     .setLabel("Next")
-    .setStyle("PRIMARY")
+    .setStyle("SUCCESS")
 let prev = new MessageButton()
     .setCustomId("prev")
     .setLabel("Previous")
@@ -17,82 +18,66 @@ let prev = new MessageButton()
 let random = new MessageButton()
     .setCustomId("random")
     .setLabel("Random Result")
-    .setStyle("PRIMARY")  
+    .setStyle("SECONDARY")  
 
 
 module.exports = {
-    name: 'movie',
-    aliases: ['mov','tv'],
-    description: 'Find info for movies and tv shows',
-    async execute(message, args){
-        var query = '';
-        var season = '';
-        var episode = '';
-        let type = (message.content).split(' ')[0].substring(1);
-        
-        if(args.length > 0){
-          if(type == 'mov' || type == 'movie'){
-            query+=args[0];
-            for(var i = 1; i <= args.length-1; i++){
-              query+=' '+args[i]+' ';
-            }
-            query = `${baseURL}/3/search/movie?api_key=${key}&language=en-US&query=${query}&page=1&include_adult=false`;
-
-          }else{
-            var el = args[args.length-1];
-            if((el.startsWith('s') || el.startsWith('S')) && el.length < 7){
-                for(var i = 1; i < el.length; i++){
-                    if(el.charAt(i).startsWith('e') || el.charAt(i).startsWith('E')){
-                        for(var j = i+1; j < el.length; j++){
-                            episode+= el.charAt(j);
-                        }
-                        break;
-                    }else{
-                        season += el.charAt(i);
-                    }
-                }
-
-                query+=args[0];
-                  for(var i = 1; i <= args.length-2; i++){
-                    query+=' '+args[i]+' ';
-                  }
-
-            }else{
-              query+=args[0];
-              for(var i = 1; i <= args.length-1; i++){
-                query+=' '+args[i]+' ';
-              }
-              
-            }
-
-
-            query = `${baseURL}/3/search/tv?api_key=${key}&language=en-US&query=${query}&page=1&include_adult=false`;
-          }
-        }else{
-          if(type == 'mov' || type == 'movie'){
-            query = `${baseURL}/3/discover/movie?api_key=${key}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&with_watch_monetization_types=flatrate`
-          }else{
-            query = `${baseURL}/3/discover/tv?api_key=${key}&language=en-US&sort_by=popularity.desc&page=1&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate`
-          }
+    data: new SlashCommandBuilder()
+	.setName('media')
+    .setDescription('Search for movies / tv series!')
+    .addStringOption(option => 
+        option.setName('type')
+        .setDescription('Choose which command category to show!')
+        .setRequired(true)
+        .addChoices(
+            { name: 'Movie', value: 'movie' },
+            { name: 'TV Series', value: 'tv' },
+        )
+    )
+    .addStringOption(option => option.setName('content').setDescription('Search for a particular one!').setRequired(false)),
+    async execute(message){
+        await message.deferReply();
+        var type = message.options._hoistedOptions[0].value;
+        var query = message.options._hoistedOptions.length == 1 ? null : message.options._hoistedOptions[1].value;
+        var baseURL = proxy
+        if(!baseURL){
+            baseURL = 'https://api.themoviedb.org'
         }
+
+        if(query){
+            if(type == 'movie'){
+                query = `${baseURL}/3/search/movie?api_key=${key}&language=en-US&query=${query}&page=1&include_adult=false`;
+            }else{
+                query = `${baseURL}/3/search/tv?api_key=${key}&language=en-US&query=${query}&page=1&include_adult=false`;
+            }
+        }else{
+            if(type == 'mov' || type == 'movie'){
+                query = `${baseURL}/3/discover/movie?api_key=${key}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&with_watch_monetization_types=flatrate`
+            }else{
+                query = `${baseURL}/3/discover/tv?api_key=${key}&language=en-US&sort_by=popularity.desc&page=1&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate`
+            }
+        }
+
         var media = await fetchData(query);
         if(Object.keys(media).length == 0 || media.results.length == 0){
-            message.channel.send({content: "No media was found. :("});
+            message.editReply({content: "No media was found. :("});
             return;
         }
-        if(type =='mov'){type = 'movie'};
         var extra_query = `${baseURL}/3/${type}/${media.results[0].id}?api_key=${key}&language=en-US`;
-        
         var currentMedia = await fetchData(extra_query);
-        
+        if(Object.keys(currentMedia).length === 0){
+            message.editReply({content: "No media was found. :("});
+            return;
+        }
 
         let row = new MessageActionRow();
         let msg;
         if(media.results.length > 1){
+            
             row.addComponents(next, random);
-            msg = message.channel.send({embeds: [embed(currentMedia, type, season, episode)],components: [row]})
+            msg = message.editReply({fetchReply: true, embeds: [embed(currentMedia, type)],components: [row]})
         }else{
-            msg = message.channel.send({embeds: [embed(currentMedia, type, season, episode)]})
+            msg = message.editReply({fetchReply: true, embeds: [embed(currentMedia, type)]})
         }
 
         var i = 0;
@@ -129,13 +114,21 @@ module.exports = {
 
                     extra_query = `${baseURL}/3/${type}/${media.results[i].id}?api_key=${key}&language=en-US`;
                     currentMedia = await fetchData(extra_query);
-                    msg.edit({embeds: [embed(currentMedia, type, season, episode)], components: [row]});
+                    if(Object.keys(currentMedia).length === 0){
+                        message.edit({content: "No media was found. :("});
+                    }else{
+                        msg.edit({embeds: [embed(currentMedia, type)], components: [row]});
+                    }
                 });
 
                 collector.on("end", async (ButtonInteraction) => {
                     extra_query = `${baseURL}/3/${type}/${media.results[i].id}?api_key=${key}&language=en-US`;
                     currentMedia = await fetchData(extra_query);
-                    msg.edit({embeds: [embed(currentMedia, type, season, episode)], components: []});
+                    if(Object.keys(currentMedia).length === 0){
+                        message.edit({content: "No media was found. :("});
+                    }else{
+                        msg.edit({embeds: [embed(currentMedia, type)], components: []});
+                    }
                 })
             }
             
@@ -156,7 +149,7 @@ async function fetchData(url){
 }
 
 
-function embed(media, type, season, episode){
+function embed(media, type){
     let posterPath = `https://www.themoviedb.org/t/p/w600_and_h900_bestv2${media.poster_path}`;
     let genres;
     if(media.genres.length == 0) genres = 'Unknown'
@@ -185,9 +178,7 @@ function embed(media, type, season, episode){
         .setDescription(media.overview)
 
     if(type == 'tv'){
-        if(season == ''){season = 1};
-        if(episode == ''){episode = 1};
-        embed.addField('Watch Here:', `https://fsapi.xyz/tv-tmdb/${media.id}-${season}-${episode}`, true);
+        embed.addField('Watch Here:', `https://fsapi.xyz/tv-tmdb/${media.id}-1-1`, true);
     }else{
         embed.addField('Watch Here:', `https://fsapi.xyz/tmdb-movie/${media.id}`, true);
     }

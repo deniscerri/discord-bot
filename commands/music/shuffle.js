@@ -1,21 +1,24 @@
 const index = require('../../index.js')
 const Discord = require("discord.js");
+const { SlashCommandBuilder } = require('@discordjs/builders');
+
 
 
 module.exports = {
-    name: 'shuffle',
-    description: 'Shuffles the queue',
-    async execute(message, args) {
+    data: new SlashCommandBuilder()
+	.setName('shuffle')
+	.setDescription('Shuffles the queue.'),
+	async execute(message) {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
 
-        if (!voice_ch) { return message.channel.send({ content: 'You need to be in a audio channel to execute this command!' }); }
+        if (!voice_ch) { return message.reply({ content: 'You need to be in a audio channel to execute this command!' }); }
         const server_queue = queue.get(message.guild.id);
 
-        if (!message.guild.me.voice.channel) return message.channel.send({ content: 'I am not in a voice channel!' });
+        if (!message.guild.me.voice.channel) return message.reply({ content: 'I am not in a voice channel!' });
 
         if (message.guild.me.voice.channel == voice_ch) {
-            if (!server_queue || server_queue.songs.length <= 1) { message.channel.send({ content: 'No songs available to shuffle!' }); return; }
+            if (!server_queue || server_queue.songs.length <= 1) { message.reply({ content: 'No songs available to shuffle!' }); return; }
 
             let current_playing = server_queue.songs[0];
             server_queue.songs.shift();
@@ -49,12 +52,12 @@ module.exports = {
 
             embed.setDescription(description);
 
-            message.channel.send({ embeds: [embed] });
+            message.reply({ embeds: [embed] });
 
 
 
         } else {
-            message.channel.send({ content: 'You need to be in the same audio channel as the bot to activate song repeat!' });
+            message.reply({ content: 'You need to be in the same audio channel as the bot to activate song repeat!' });
         }
 
 

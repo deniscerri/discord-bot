@@ -1,20 +1,22 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const fs = require('fs');
+const path = require("path")
 
 module.exports = {
-	name: '8ball',
-	description: 'Responds to your stupid questions!',
-	execute(message, args) {
-    var question = args.slice(0).join(" ");
-  
-    if(question === ''){
-      message.channel.send({content: "Where the question at smh!"});
-        return;
-    }
+  data: new SlashCommandBuilder()
+	.setName('8ball')
+	.setDescription('Responds to your stupid questions!!')
+	.addStringOption(option =>
+		option.setName('question')
+			.setDescription('Write a question')
+			.setRequired(true)),
+	execute(message) {
+    var question = message.options._hoistedOptions[0].value;
 
-    let answerText = fs.readFileSync("./txt/8ball.txt").toString();
+    let answerText = fs.readFileSync(path.resolve(__dirname, "../txt/8ball.txt")).toString();
     let answers = answerText.split("\n");
     let answer = answers[Math.floor(Math.random() * answers.length)]
-    message.channel.send({content: answer});
+    message.reply({content: `*${question}*\n\n**${answer}**`});
   
 	},
 };

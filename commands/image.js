@@ -1,5 +1,7 @@
 const Scraper = require('images-scraper');
-const {MessageButton, MessageActionRow, ButtonInteraction} = require('discord.js');
+const {MessageButton, MessageActionRow} = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
+
 const fetch = require('node-fetch');
 
 const minimal_args = [
@@ -45,7 +47,7 @@ const minimal_args = [
 let next = new MessageButton()
 .setCustomId("next")
 .setLabel("Next")
-.setStyle("PRIMARY")
+.setStyle("SUCCESS")
 let prev = new MessageButton()
   .setCustomId("prev")
   .setLabel("Previous")
@@ -53,7 +55,7 @@ let prev = new MessageButton()
 let random = new MessageButton()
   .setCustomId("random")
   .setLabel("Random Result")
-  .setStyle("PRIMARY")  
+  .setStyle("SECONDARY")  
 
 
 const google = new Scraper({
@@ -66,22 +68,19 @@ const google = new Scraper({
 });
 
 module.exports = {
-  name: 'img',
-  aliases: ['image','images','mg','pic','picture'],
-	description: 'Get random images from the net!',
-	async execute(message, args) {
+  data: new SlashCommandBuilder()
+	.setName('img')
+	.setDescription('Send an image!')
+  .addStringOption(option => option.setName('word').setDescription('Write a word').setRequired(true)),
+	async execute(message) {
     // extract search query from message
-    var search = args.slice(0).join(" ");
+    var search = message.options._hoistedOptions[0].value;
     var nr = 50;
 
-    if(search === ""){
-      message.channel.send({content: "What pic do u want me to search?"});
-      return;
-    }
     let url = `https://www.googleapis.com/customsearch/v1?key=${process.env['google_search']}&safe=medium&searchType=image&q=${search}&start=1`
-    message.channel.send({content: '🔎📷 Searching for: `'+search+'`'});
+    message.reply({content: '🔎📷 Searching for: `'+search+'`'});
     let json = await fetch_json(url);
-    if(json.hasOwnProperty('items')){
+    if(Object.keys(json).length != 0){
       costum_google_search(message, json, search);
     }else{
       fallback_scraper(message, search, nr);
@@ -92,17 +91,40 @@ module.exports = {
 
 const fetch_json = async (url) => {
   let settings = { method: "Get" };
-  let res;
   var response = await fetch(url, settings)
-  let json = await response.json();
+  var json;
+
+  try{
+    json = await response.json();
+  }catch(err){
+    json = {}
+  }
+
+  var uniqueURLs = []
+
+  //filter any duplicate results
+  if(json.hasOwnProperty('items')){
+
+    json.items = json.items.filter(i => {
+      const isDuplicate = uniqueURLs.includes(i.title)
+
+      if(!isDuplicate){
+        uniqueURLs.push(i.title)
+        return true
+      }
+
+      return false
+    })
+
+  }
+  else json = {}
   return json;
 }
-
 
 const costum_google_search = (message, json, search) => {
   var i = 0;
   let row = new MessageActionRow().addComponents(next, random);
-  var msg = message.channel.send({content: json.items[i].link, components: [row]})
+  var msg = message.channel.send({fetchReply: true, content: json.items[i].link, components: [row]})
     .then(async function(msg){
       const collector = msg.createMessageComponentCollector({
         time: 600000
@@ -139,12 +161,12 @@ const costum_google_search = (message, json, search) => {
         row.addComponents(next);
         row.addComponents(random);
         
-        msg.edit({content: json.items[i%10].link, components: [row]})
+        msg.edit({content: json.items[i%json.items.length].link, components: [row]})
         
       })
 
       collector.on("end", async (ButtonInteraction) => {
-        msg.edit({content: json.items[i%10].link, components: []});
+        msg.edit({content: json.items[i%json.items.length].link, components: []});
       })
     })
 }
@@ -152,45 +174,51 @@ const costum_google_search = (message, json, search) => {
 
 const fallback_scraper = async (message, search, nr) => {
   var i = 0;
-  const results = await google.scrape(search,nr);
-    let row = new MessageActionRow().addComponents(next,random);
-    var i = 0;
-    var msg = message.channel.send({content: results[i].url, components: [row]})
-      .then(async function(msg){
-        const collector = msg.createMessageComponentCollector({
-          time: 600000
-        });
+  let results;
+  try{
+    results = await google.scrape(search,nr);
+  }catch(err){
+    message.channel.send({content: "Error! Search timed out :("})
+    return
+  }
+  let row = new MessageActionRow().addComponents(next,random);
+  var i = 0;
+  var msg = message.channel.send({fetchReply: true, content: results[i].url, components: [row]})
+    .then(async function(msg){
+      const collector = msg.createMessageComponentCollector({
+        time: 600000
+      });
 
-        collector.on("collect", async (ButtonInteraction) => {
-            ButtonInteraction.deferUpdate();
-            const id = ButtonInteraction.customId;
-            switch(id){
-                case 'next':
-                    i = ++i % results.length;
-                    break;
-                case 'prev':
-                    i = --i % results.length;
-                    break;
-                case 'random':
-                    i = Math.floor(Math.random() * results.length);
-                    break;
-                }
-            row = new MessageActionRow();
-            if(i == results.length){
-                row.addComponents(prev);
-            }else if(i == 0){
-                row.addComponents(next);
-            }else{
-                row.addComponents(prev);
-                row.addComponents(next);
-            }
-            row.addComponents(random);
+      collector.on("collect", async (ButtonInteraction) => {
+          ButtonInteraction.deferUpdate();
+          const id = ButtonInteraction.customId;
+          switch(id){
+              case 'next':
+                  i = ++i % results.length;
+                  break;
+              case 'prev':
+                  i = --i % results.length;
+                  break;
+              case 'random':
+                  i = Math.floor(Math.random() * results.length);
+                  break;
+              }
+          row = new MessageActionRow();
+          if(i == results.length){
+              row.addComponents(prev);
+          }else if(i == 0){
+              row.addComponents(next);
+          }else{
+              row.addComponents(prev);
+              row.addComponents(next);
+          }
+          row.addComponents(random);
 
-            msg.edit({content: results[i].url, components: [row]});
-        });
+          msg.edit({content: results[i].url, components: [row]});
+      });
 
-        collector.on("end", (ButtonInteraction) => {
-            msg.edit({content: results[i].url, components: []});
-        })
+      collector.on("end", (ButtonInteraction) => {
+          msg.edit({content: results[i].url, components: []});
       })
+    })
 }

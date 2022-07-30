@@ -69,5 +69,13 @@ https://developers.google.com/custom-search/v1/overview
 
 You can get the Spotify codes by looking through the play-dl documentation.
 
+Generated URL should be like this
+
+```
+https://discord.com/api/oauth2/authorize?client_id=CLIENT_ID&permissions=277062273344&scope=bot%20applications.commands
+```
+
+Replace CLIENT_ID with your bot. You can find it it Discord's Developer portal, General Information, Application ID
+
 Alot of the bot's commands are powered through REST API calls.
 I thank every developer that have made the projects this bot depends on. :)
