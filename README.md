@@ -41,6 +41,25 @@ Denis Discord Bot is a nice useful bot you can use on your discord server. It ha
 - [x] show play history. [Will clear if the bot leaves the channel]
 - [x] shuffle the queue
 
+## Screenshots of some commands: 
+
+<p float="left">
+  <img src="https://user-images.githubusercontent.com/64997243/181926249-830425e3-2acb-4b6d-b762-682a20340f78.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926253-ad040cd5-1690-4688-9a21-a8ac1b76d0cc.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926259-7a7ac9ec-4cc4-4a4f-82aa-da198b48abce.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926261-7d64ed60-8fbe-4b32-8e17-cbb8cc413e07.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926263-afebb362-a28e-461e-9991-9a09afff1a62.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926265-f733e1f4-b8d8-4132-9d2a-128659d3c4e4.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926268-efced1b0-0449-42e0-bdcd-e2e173de5b68.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926269-8aaa1f08-86f2-4d41-bc05-92ba31cc3b1a.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926272-3337c25b-d58d-4bc5-b97c-ef739a210bea.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926274-d29b1d1d-e59b-41d7-847a-5284f1dc6c5d.png" width="50%" />
+  <img src="https://user-images.githubusercontent.com/64997243/181926276-43f794fd-acfe-4e06-a276-e80f427d2e92.png" width="50%" />
+</p>
+
+
+
+
 ## Dev environment:
 
 After cloning the project you have to install the npm libraries.
