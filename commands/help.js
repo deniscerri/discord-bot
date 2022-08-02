@@ -1,7 +1,9 @@
 const Discord = require('discord.js');
 const fs = require('fs');
+const path = require('path')
 const gif = 'https://c.tenor.com/R_mwXHSitkQAAAAC/plank-ed-edd-n-eddy.gif';
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const get_commands = require('../helpers/get_commands')
 
 
 module.exports = {
@@ -21,28 +23,26 @@ module.exports = {
         var cmd = message.options._hoistedOptions[0].value;
 
         var title = 'All Commands of DenisBot';
-        var directory = `${__dirname}/`; 
+        var commandFiles = get_commands.execute(path.join(__dirname, '/'))
 
         if(cmd == 'music'){
             title = 'All Music Commands of DenisBot';
-            directory = `${__dirname}/music/`;
+            commandFiles = get_commands.execute(`${__dirname}/music`)
         }
 		
-        let embed = createHelpEmbed(title, directory);            
+        let embed = createHelpEmbed(title, commandFiles);            
         return message.reply({embeds: [embed], ephemeral: true });
 	},
 };
 
-
-const createHelpEmbed = (title, directory) => {
-    const commandFiles = fs.readdirSync(directory).filter(file => file.endsWith('.js'));
+const createHelpEmbed = (title, commandFiles) => {
     var description = '';
     let commandEmbed = new Discord.MessageEmbed()
         .setAuthor(title)
         .setImage(gif)
     
     for (const file of commandFiles) {
-        const command = require(`${directory}/${file}`);
+        const command = require(file);
         description += `** /${command.data.name}**\t${command.data.description}\n`
         if(command.data.options.length > 0){
             for(const option of command.data.options){

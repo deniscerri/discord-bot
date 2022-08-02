@@ -7,9 +7,6 @@ module.exports = {
 	.setName('leave')
 	.setDescription('Disconnects the bot from the audio channel!'),
 	async execute(message) {
-        message.deferReply();
-        message.deleteReply();
-
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
 

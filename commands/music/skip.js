@@ -1,6 +1,6 @@
 const index = require('../../index.js');
 const player = require('./play.js');
-const queue_functions = require(`${__dirname}/queue.js`)
+const queue_functions = require(`${__dirname}/queue/queue.js`)
 const { SlashCommandBuilder } = require('@discordjs/builders');
 
 

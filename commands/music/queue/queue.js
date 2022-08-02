@@ -1,4 +1,4 @@
-const index = require('../../index.js');
+const index = require('../../../index.js');
 const Discord = require("discord.js");
 const {MessageButton, MessageActionRow} = require("discord.js");
 const { SlashCommandBuilder } = require('@discordjs/builders');
@@ -29,65 +29,16 @@ module.exports = {
     data: new SlashCommandBuilder()
 	.setName('queue')
 	.setDescription('Show the Music Queue.')
-    .addSubcommand(comm =>
-        comm.setName('list')
-                .setDescription('List elements in the queue')
-                .addStringOption(option =>
-                    option.setName('page')
-                    .setDescription('Write the page number!')
-                    .setRequired(false)
-                )
-    )
-    .addSubcommandGroup(group =>
-        group.setName('clear')
-        .setDescription('Clear elements from the queue')
-        .addSubcommand(comm =>
-            comm.setName('all')
-                .setDescription('Clear all elements from the queue')
-        )
-        .addSubcommand(comm =>
-            comm.setName('one')
-                .setDescription('Clear one from the queue')
-                .addStringOption(option =>
-                    option.setName('index')
-                    .setDescription('Write the song index from the queue!')
-                    .setRequired(true)
-                )
-        )
-        .addSubcommand(comm =>
-            comm.setName('multiple')
-                .setDescription('Clear a range of songs from the queue')
-                .addStringOption(option =>
-                    option.setName('first-index')
-                    .setDescription('Write the first song index from where the deletion starts!')
-                    .setRequired(true)
-                )
-                .addStringOption(option =>
-                    option.setName('last-index')
-                    .setDescription('Write the last song index you want to delete!')
-                    .setRequired(true)
-                )
-            )
-        .addSubcommand(comm =>
-            comm.setName('user')
-                .setDescription('Clear all songs from a user')
-                .addUserOption(option =>
-                    option.setName('target')
-                    .setDescription('Select a user')
-                    .setRequired(true)),
-        )
+    .addStringOption(option =>
+        option.setName('page')
+        .setDescription('Write the page number!')
+        .setRequired(false)
     ),
 	async execute(message) {
         const queue = index.queue;
         const server_queue = queue.get(message.guild.id);
         
         if(!server_queue) return message.reply({content: 'There are no songs in the queue!'});
-
-        if(message.options._group == 'clear'){
-            clear_queue(message,queue, server_queue);
-            return;
-        }
-
         message.deferReply();
         message.deleteReply();
         

@@ -1,9 +1,11 @@
 const fs = require('fs');
+const path = require("path")
 const Discord = require('discord.js');
 const keepAlive = require('./server.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const {Meme} = require('./helpers/reddit_memes');
+const get_commands = require('./helpers/get_commands')
 var meme_helper = new Meme();
 
 
@@ -11,24 +13,13 @@ const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD
 client.commands = new Discord.Collection();
 
 const commands = []
-
-
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-const musicCommandFiles = fs.readdirSync('./commands/music').filter(file => file.endsWith('.js'));
-
+const commandFiles = get_commands.execute(path.join(__dirname, '/commands'))
 
 for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
+	const command = require(file);
 	commands.push(command.data.toJSON());
 	client.commands.set(command.data.name, command);
 }
-
-for (const file of musicCommandFiles) {
-	const command = require(`./commands/music/${file}`);
-	commands.push(command.data.toJSON());
-	client.commands.set(command.data.name, command);
-}
-
 
 client.once('ready', () => {
 	const client_id = client.user.id;
@@ -54,7 +45,7 @@ client.once('ready', () => {
 
 		console.log('DenisBot is online!');
 	})();
-	client.user.setActivity('Games!',{type: 'PLAYING'});
+	client.user.setActivity('/help',{type: 'PLAYING'});
 });
 
 client.on('interactionCreate', async interaction => {

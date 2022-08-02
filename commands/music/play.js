@@ -86,7 +86,8 @@ const init_queue = (message) => {
         audioPlayer: createAudioPlayer(),
         repeat: false,
         length_seconds: 0,
-        songs: []
+        songs: [],
+        volume: 1
     }    
 
     queue.set(message.guild.id, server_queue);
@@ -138,7 +139,7 @@ async function video_player(message, queue, guild, song, seek){
     let stream = await getStream(song, seek);
     try{
         const track = createAudioResource(stream.stream, {inlineVolume: true, inputType: stream.type});
-		track.volume.setVolume(1);
+		track.volume.setVolume(server_queue.volume);
         server_queue.audioPlayer.play(track);
         if(!seek){
             await now_playing.execute(message , [server_queue, true]);
