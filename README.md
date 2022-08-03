@@ -41,7 +41,6 @@ Denis Discord Bot is a nice useful bot you can use on your discord server. It ha
 - [x] seek to a certain time in the song
 - [x] fast forward by certain seconds
 - [x] rewind by certain seconds
-- [x] show play history. [Will clear if the bot leaves the channel]
 - [x] shuffle the queue
 
 ## Screenshots of some commands: 
