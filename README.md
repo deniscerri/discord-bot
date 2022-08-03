@@ -31,6 +31,9 @@ Denis Discord Bot is a nice useful bot you can use on your discord server. It ha
 - [x] play a song then immediately play it without affecting the queue
 - [x] manage song queue by clearing portions or the whole thing
 - [x] clear all songs put by a certain user from the queue
+- [x] clear all songs that are put by users who have left the queue
+- [x] move songs around the queue to the top or swap songs positions
+- [x] set song volume
 - [x] loop a song
 - [x] restart a song from the beginning
 - [x] skip a song, even to a index from the queue
