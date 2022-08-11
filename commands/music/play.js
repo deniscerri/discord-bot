@@ -1,7 +1,11 @@
 const ytdl = require('ytdl-core');
 const play = require('play-dl');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
+const ytsc = require('yt-search');
+const ytpl = require('ytpl');
+const {SlashCommandBuilder} = require("discord.js");
+const {joinVoiceChannel, AudioResource, createAudioResource, createAudioPlayer, AudioPlayerStatus} = require('@discordjs/voice');
+const index = require('../../index.js');
+const now_playing = require(`${__dirname}/now_playing.js`);
 
 play.setToken({ useragent: ['Chrome/100']})
 
@@ -21,15 +25,6 @@ play.getFreeClientID().then((clientID) => {
       }
     })
 })
-
-const ytsc = require('yt-search');
-const ytpl = require('ytpl');
-const Discord = require("discord.js");
-const {joinVoiceChannel, AudioResource, createAudioResource, createAudioPlayer, AudioPlayerStatus} = require('@discordjs/voice');
-const index = require('../../index.js');
-const now_playing = require(`${__dirname}/now_playing.js`);
-
-
 module.exports = {
     data: new SlashCommandBuilder()
 	.setName('play')
@@ -43,10 +38,9 @@ module.exports = {
 	async execute(message) {
         const voice_ch = message.member.voice.channel;
         const queue = index.queue;
-        
         if(!voice_ch){ return message.reply({content: 'You need to be in a audio channel to execute this command!'});}
         
-        if(!(message.guild.me.voice.channel == voice_ch) && message.guild.me.voice.channel){
+        if(!(message.guild.members.me.voice.channel == voice_ch) && message.guild.members.me.voice.channel){
             return message.reply({content: 'You need to be in the same audio channel as the bot to play a song!'});
         }
         

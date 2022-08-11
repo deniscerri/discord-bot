@@ -1,6 +1,5 @@
-const fs = require('fs');
 const path = require("path")
-const Discord = require('discord.js');
+const {Client, GatewayIntentBits, Collection} = require('discord.js');
 const keepAlive = require('./server.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
@@ -9,8 +8,13 @@ const get_commands = require('./helpers/get_commands')
 var meme_helper = new Meme();
 
 
-const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"] });
-client.commands = new Discord.Collection();
+const client = new Client({ intents:[
+							GatewayIntentBits.Guilds,
+							GatewayIntentBits.GuildMessages,
+							GatewayIntentBits.GuildVoiceStates,
+							GatewayIntentBits.MessageContent
+						]});
+client.commands = new Collection();
 
 const commands = []
 const commandFiles = get_commands.execute(path.join(__dirname, '/commands'))

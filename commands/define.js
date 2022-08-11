@@ -1,7 +1,5 @@
 const fetch = require('node-fetch');
-const {MessageButton, MessageActionRow, MessageEmbed } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
+const {ButtonBuilder, ActionRowBuilder, EmbedBuilder, SlashCommandBuilder, ButtonStyle } = require('discord.js');
 let isRandom = false;
 let url;
 
@@ -17,17 +15,17 @@ module.exports = {
     json = await fetchUrban(question);
 
     //navigation buttons
-    let another = new MessageButton()
+    let another = new ButtonBuilder()
       .setCustomId("another")
       .setLabel("Another Definition")
-      .setStyle("PRIMARY")
-    let one_result = new MessageButton()
+      .setStyle(ButtonStyle.Primary)
+    let one_result = new ButtonBuilder()
       .setCustomId('one')
       .setLabel('1 Result Found')
-      .setStyle('SECONDARY')
+      .setStyle(ButtonStyle.Secondary)
       .setDisabled(true)
 
-    let row = new MessageActionRow();
+    let row = new ActionRowBuilder();
     if(json.list.length > 1){
         row.addComponents(another);
     }else{
@@ -54,7 +52,7 @@ module.exports = {
             i++;
             i = i % json.list.length;
 
-            row = new MessageActionRow();
+            row = new ActionRowBuilder();
             row.addComponents(another);
 
             msg.edit({embeds: [embed(json, i)], components: [row]});
@@ -92,12 +90,12 @@ async function fetchUrban(question){
 }
 
 function embed(json, i){
-  var embed = new MessageEmbed()
+  var embed = new EmbedBuilder()
           .setTitle((json.list[i].word).charAt(0).toUpperCase() + json.list[i].word.substring(1))
           .setURL(json.list[i].permalink)
           .setDescription(json.list[i].definition)
-          .addField('Example:', json.list[i].example, true)
-          .setFooter('👍 '+json.list[i].thumbs_up+' 👎 '+json.list[i].thumbs_down);
+          .addFields([{name: 'Example:', value: json.list[i].example}])
+          .setFooter({text: '👍 '+json.list[i].thumbs_up+' 👎 '+json.list[i].thumbs_down});
 
   return embed;
 }

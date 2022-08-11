@@ -1,7 +1,6 @@
 const index = require('../../index.js');
 const player = require(`${__dirname}/play.js`);
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
+const {SlashCommandBuilder} = require('discord.js');
 
 
 module.exports = {
@@ -16,9 +15,9 @@ module.exports = {
         const voice_ch = message.member.voice.channel;
 
         if(!voice_ch){ return message.reply({content: 'You need to be in a audio channel to execute this command!'});}
-        if(!message.guild.me.voice.channel) return message.reply({content: 'I am not in a voice channel!'});
+        if(!message.guild.members.me.voice.channel) return message.reply({content: 'I am not in a voice channel!'});
         
-        if(message.guild.me.voice.channel == voice_ch){
+        if(message.guild.members.me.voice.channel == voice_ch){
             await seekSong(message);
         }else{
             message.reply({content: 'You need to be in the same audio channel as the bot to kick it!'});

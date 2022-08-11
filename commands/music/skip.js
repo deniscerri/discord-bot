@@ -1,8 +1,7 @@
 const index = require('../../index.js');
 const player = require('./play.js');
 const queue_functions = require(`${__dirname}/queue/queue.js`)
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
+const {SlashCommandBuilder} = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,9 +17,9 @@ module.exports = {
 
         if(!voice_ch){ return message.reply({content: 'You need to be in a audio channel to execute this command!'});}
         const server_queue = queue.get(message.guild.id);
-        if(!message.guild.me.voice.channel) return message.reply({content: 'I am not in a voice channel!'});
+        if(!message.guild.members.me.voice.channel) return message.reply({content: 'I am not in a voice channel!'});
         
-        if(message.guild.me.voice.channel == voice_ch){
+        if(message.guild.members.me.voice.channel == voice_ch){
             await skip(message,queue, server_queue);
         }else{
             message.reply({content: 'You need to be in the same audio channel as the bot to skip a song!'});

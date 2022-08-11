@@ -1,32 +1,8 @@
 const index = require('../../../index.js');
-const Discord = require("discord.js");
-const {MessageButton, MessageActionRow} = require("discord.js");
-const { SlashCommandBuilder } = require('@discordjs/builders');
-        
-//navigation buttons
-let next = new MessageButton()
-.setCustomId("next")
-.setLabel("Next")
-.setStyle("PRIMARY")
-
-let prev = new MessageButton()
-.setCustomId("prev")
-.setLabel("Previous")
-.setStyle("PRIMARY") 
-
-let first = new MessageButton()
-.setCustomId("first")
-.setLabel("First Page")
-.setStyle("SECONDARY") 
-
-let last = new MessageButton()
-.setCustomId("last")
-.setLabel("Last Page")
-.setStyle("SECONDARY") 
-
+const Discord = require("discord.js");      
 
 module.exports = {
-    data: new SlashCommandBuilder()
+    data: new Discord.SlashCommandBuilder()
 	.setName('clear-queue')
 	.setDescription('Show the Music Queue.')
     .addSubcommand(comm =>
@@ -86,7 +62,7 @@ module.exports = {
 
 const clear_queue = (message,queue, server_queue) => {
     const voice_ch = message.member.voice.channel;
-    if(!(message.guild.me.voice.channel == voice_ch)){
+    if(!(message.guild.members.me.voice.channel == voice_ch)){
         return message.editReply({content: 'You need to be in the same audio channel as the bot to clear the queue!'});
     }
     if(message.options._subcommand == 'all'){

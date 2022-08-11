@@ -1,6 +1,5 @@
 const fetch = require('node-fetch');
-const { MessageEmbed } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 
 let url;
 
@@ -31,7 +30,7 @@ module.exports = {
 
 function embed(json, message){
   let description = '';
-  var embed = new MessageEmbed()  
+  var embed = new EmbedBuilder()  
   
   if(json.hasOwnProperty('title')){
       embed.setTitle(json.title);

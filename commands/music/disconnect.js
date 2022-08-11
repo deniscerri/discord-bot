@@ -1,6 +1,5 @@
 const index = require('../../index.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
+const {SlashCommandBuilder} = require('discord.js')
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,9 +10,9 @@ module.exports = {
         const queue = index.queue;
 
         if(!voice_ch){ return message.reply({content: 'You need to be in a audio channel to execute this command!'});}
-        if(!message.guild.me.voice.channel) return message.reply({content: 'I am not in a voice channel!'});
+        if(!message.guild.members.me.voice.channel) return message.reply({content: 'I am not in a voice channel!'});
         
-        if(message.guild.me.voice.channel == voice_ch){
+        if(message.guild.members.me.voice.channel == voice_ch){
             let server_queue = queue.get(message.guild.id);
             server_queue.connection.disconnect();
             queue.delete(message.guild.id);

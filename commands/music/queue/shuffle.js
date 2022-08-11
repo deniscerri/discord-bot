@@ -1,8 +1,5 @@
 const index = require('../../../index.js')
-const Discord = require("discord.js");
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
-
+const { EmbedBuilder, SlashCommandBuilder } = require("discord.js")
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -15,9 +12,9 @@ module.exports = {
         if (!voice_ch) { return message.reply({ content: 'You need to be in a audio channel to execute this command!' }); }
         const server_queue = queue.get(message.guild.id);
 
-        if (!message.guild.me.voice.channel) return message.reply({ content: 'I am not in a voice channel!' });
+        if (!message.guild.members.me.voice.channel) return message.reply({ content: 'I am not in a voice channel!' });
 
-        if (message.guild.me.voice.channel == voice_ch) {
+        if (message.guild.members.me.voice.channel == voice_ch) {
             if (!server_queue || server_queue.songs.length <= 1) { message.reply({ content: 'No songs available to shuffle!' }); return; }
 
             let current_playing = server_queue.songs[0];
@@ -32,7 +29,7 @@ module.exports = {
 
             server_queue.songs = new_queue;
 
-            let embed = new Discord.MessageEmbed()
+            let embed = new EmbedBuilder()
             embed.setTitle('Queue Shuffled!')
             let description = '`Up Next:` ' + `[${server_queue.songs[1].title}](${server_queue.songs[1].url})\n\n`;
             let playbackDuration;

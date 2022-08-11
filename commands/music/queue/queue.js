@@ -1,28 +1,27 @@
 const index = require('../../../index.js');
 const Discord = require("discord.js");
-const {MessageButton, MessageActionRow} = require("discord.js");
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {ButtonBuilder, ActionRowBuilder, SlashCommandBuilder, ButtonStyle, EmbedBuilder} = require("discord.js");
         
 //navigation buttons
-let next = new MessageButton()
+let next = new ButtonBuilder()
 .setCustomId("next")
 .setLabel("Next")
-.setStyle("PRIMARY")
+.setStyle(ButtonStyle.Primary)
 
-let prev = new MessageButton()
+let prev = new ButtonBuilder()
 .setCustomId("prev")
 .setLabel("Previous")
-.setStyle("PRIMARY") 
+.setStyle(ButtonStyle.Primary) 
 
-let first = new MessageButton()
+let first = new ButtonBuilder()
 .setCustomId("first")
 .setLabel("First Page")
-.setStyle("SECONDARY") 
+.setStyle(ButtonStyle.Secondary) 
 
-let last = new MessageButton()
+let last = new ButtonBuilder()
 .setCustomId("last")
 .setLabel("Last Page")
-.setStyle("SECONDARY") 
+.setStyle(ButtonStyle.Secondary) 
 
 
 module.exports = {
@@ -67,7 +66,7 @@ module.exports = {
         
         let plural_song = (server_queue.songs.length == 2) ? 'song' : 'songs';
         embeds.forEach((e, i) => {
-            e.setFooter(`\n\n ${server_queue.songs.length-1} ${plural_song} in queue | ${totalLength} Total Length\nPage ${i+1}/${embeds.length}`);
+            e.setFooter({ text: `\n\n ${server_queue.songs.length-1} ${plural_song} in queue | ${totalLength} Total Length\nPage ${i+1}/${embeds.length}`});
         });
 
         var i = 0;
@@ -88,7 +87,7 @@ module.exports = {
             }
         }
 
-        let row = new MessageActionRow();
+        let row = new ActionRowBuilder();
         let msg;
 
         if(embeds.length > 1){
@@ -124,7 +123,7 @@ module.exports = {
                             i = embeds.length - 1;
                             break;
                         }
-                    row = new MessageActionRow();
+                    row = new ActionRowBuilder();
                     if(i == embeds.length-1){
                         row.addComponents(first);
                         row.addComponents(prev);
@@ -150,8 +149,8 @@ module.exports = {
 
 
 const build_queue = (server_queue, message, index, limit) =>{
-    var embed = new Discord.MessageEmbed()
-        .setAuthor('DenisBOT', 'https://cdn50.picsart.com/168503106000202.png', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    var embed = new EmbedBuilder()
+        .setAuthor({ name: 'DenisBOT', iconURL: 'https://cdn50.picsart.com/168503106000202.png', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'})
         .setTitle(`${message.guild.name}'s Music Queue!`)
         .setColor('#FFFF00')
     index++;

@@ -1,9 +1,6 @@
-const Discord = require("discord.js");
 const lyricsParse = require('lyrics-parse');
 const index = require('../../index.js');
-const {MessageButton, MessageActionRow} = require("discord.js");
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
+const {ButtonBuilder, ActionRowBuilder, ButtonStyle, EmbedBuilder, SlashCommandBuilder} = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,7 +8,7 @@ module.exports = {
 	.setDescription('Show lyrics of current playing song.')
     .addStringOption(option =>
 		option.setName('query')
-			.setDescription('Write a custom title for a custom lyrics!')
+			.setDescription('Write a custom title for custom lyrics!')
 			.setRequired(false)),
 	async execute(message) {
         await message.deferReply();
@@ -24,9 +21,9 @@ module.exports = {
             if(!voice_ch){ return message.editReply('You need to be in a audio channel to execute this command!');}
             const server_queue = queue.get(message.guild.id);
 
-            if(!message.guild.me.voice.channel) return message.editReply('I am not in a voice channel!');
+            if(!message.guild.members.me.voice.channel) return message.editReply('I am not in a voice channel!');
             
-            if(!(message.guild.me.voice.channel == voice_ch)){
+            if(!(message.guild.members.me.voice.channel == voice_ch)){
                 return message.editReply('You need to be in the same audio channel as the bot to show lyrics!');
             }
 
@@ -53,16 +50,16 @@ module.exports = {
             lyrics_arr.push(lyrics);
 
             //navigation buttons
-            let next = new MessageButton()
+            let next = new ButtonBuilder()
                 .setCustomId("next")
                 .setLabel("Next")
-                .setStyle("PRIMARY")
-            let prev = new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+            let prev = new ButtonBuilder()
                 .setCustomId("prev")
                 .setLabel("Previous")
-                .setStyle("PRIMARY")  
+                .setStyle(ButtonStyle.Primary)  
 
-            let row = new MessageActionRow();
+            let row = new ActionRowBuilder();
             let msg;
             var embed = build_lyrics_embed(title, lyrics_arr, 0);
             if(lyrics_arr.length > 1){
@@ -92,7 +89,7 @@ module.exports = {
                                 i = --i % lyrics_arr.length;
                                 break;
                             }
-                        row = new MessageActionRow();
+                        row = new ActionRowBuilder();
                         if(i == lyrics_arr.length-1){
                             row.addComponents(prev);
                         }else if(i == 0){
@@ -115,8 +112,8 @@ module.exports = {
 }
 
 const build_lyrics_embed = (title, lyrics_arr, i) => {
-    var embed = new Discord.MessageEmbed()
-    .setAuthor('DenisBOT', 'https://cdn50.picsart.com/168503106000202.png', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    var embed = new EmbedBuilder()
+    .setAuthor({name: 'DenisBOT', iconURL: 'https://cdn50.picsart.com/168503106000202.png', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'})
     .setTitle(`${title}'s Lyrics!`)
     .setColor('#FFFF00')
     .setDescription(lyrics_arr[i])

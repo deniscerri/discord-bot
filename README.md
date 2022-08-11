@@ -43,7 +43,7 @@ Denis Discord Bot is a nice useful bot you can use on your discord server. It ha
 - [x] rewind by certain seconds
 - [x] shuffle the queue
 
-## Screenshots of some commands: 
+## Screenshots of some commands:
 
 <p float="left">
   <img src="https://user-images.githubusercontent.com/64997243/181926249-830425e3-2acb-4b6d-b762-682a20340f78.png" width="50%" />
@@ -58,9 +58,6 @@ Denis Discord Bot is a nice useful bot you can use on your discord server. It ha
   <img src="https://user-images.githubusercontent.com/64997243/181926274-d29b1d1d-e59b-41d7-847a-5284f1dc6c5d.png" width="50%" />
   <img src="https://user-images.githubusercontent.com/64997243/181926276-43f794fd-acfe-4e06-a276-e80f427d2e92.png" width="50%" />
 </p>
-
-
-
 
 ## Dev environment:
 
@@ -97,6 +94,8 @@ https://discord.com/api/oauth2/authorize?client_id=CLIENT_ID&permissions=2770622
 ```
 
 Replace CLIENT_ID with your bot. You can find it it Discord's Developer portal, General Information, Application ID
+
+Turn on Message Content Intent in the developer portal. [This intent is used on the playsearch command]. Go to Bot Tab, Message Content Intent
 
 Alot of the bot's commands are powered through REST API calls.
 I thank every developer that have made the projects this bot depends on. :)

@@ -1,24 +1,22 @@
 const axios = require('axios');
-const Discord = require("discord.js");
 const key = process.env['moviedb'];
 const proxy = process.env['TMDBproxy'];
-const {MessageButton, MessageActionRow} = require("discord.js");
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {ButtonBuilder, ActionRowBuilder, SlashCommandBuilder, ButtonStyle, EmbedBuilder} = require("discord.js");
 
 
 //navigation buttons
-let next = new MessageButton()
+let next = new ButtonBuilder()
     .setCustomId("next")
     .setLabel("Next")
-    .setStyle("SUCCESS")
-let prev = new MessageButton()
+    .setStyle(ButtonStyle.Success)
+let prev = new ButtonBuilder()
     .setCustomId("prev")
     .setLabel("Previous")
-    .setStyle("PRIMARY")  
-let random = new MessageButton()
+    .setStyle(ButtonStyle.Primary)  
+let random = new ButtonBuilder()
     .setCustomId("random")
     .setLabel("Random Result")
-    .setStyle("SECONDARY")  
+    .setStyle(ButtonStyle.Secondary)  
 
 
 module.exports = {
@@ -70,7 +68,7 @@ module.exports = {
             return;
         }
 
-        let row = new MessageActionRow();
+        let row = new ActionRowBuilder();
         let msg;
         if(media.results.length > 1){
             
@@ -101,7 +99,7 @@ module.exports = {
                             i = Math.floor(Math.random() * media.results.length);
                             break;
                         }
-                    row = new MessageActionRow();
+                    row = new ActionRowBuilder();
                     if(i == media.results.length){
                         row.addComponents(prev);
                     }else if(i == 0){
@@ -166,21 +164,21 @@ function embed(media, type){
     }catch(err){
         runtime = 'Unknown';
     }
-    var embed = new Discord.MessageEmbed()
+    var embed = new EmbedBuilder()
         .setTitle(media.original_title || media.name)
         .setImage(posterPath)
-        .addFields(
+        .addFields([
             {name:'Rating', value: media.vote_average.toString(), inline: true},
             {name:'Released', value: released.toString(), inline: true},
             {name:'Runtime', value: runtime.toString(), inline: true},
             {name:'Genre', value: genres, inline: true},
-        )
+        ])
         .setDescription(media.overview)
 
     if(type == 'tv'){
-        embed.addField('Watch Here:', `https://fsapi.xyz/tv-tmdb/${media.id}-1-1`, true);
+        embed.addFields([{name: 'Watch Here:', value: `https://fsapi.xyz/tv-tmdb/${media.id}-1-1`}]);
     }else{
-        embed.addField('Watch Here:', `https://fsapi.xyz/tmdb-movie/${media.id}`, true);
+        embed.addFields([{name: 'Watch Here:', value: `https://fsapi.xyz/tmdb-movie/${media.id}`, }]);
     }
 
     return embed;

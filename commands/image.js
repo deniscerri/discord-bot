@@ -1,7 +1,5 @@
 const Scraper = require('images-scraper');
-const {MessageButton, MessageActionRow} = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
+const {ButtonBuilder, ActionRowBuilder, SlashCommandBuilder, ButtonStyle} = require('discord.js');
 const fetch = require('node-fetch');
 
 const minimal_args = [
@@ -44,18 +42,18 @@ const minimal_args = [
 
 
 //navigation buttons
-let next = new MessageButton()
+let next = new ButtonBuilder()
 .setCustomId("next")
 .setLabel("Next")
-.setStyle("SUCCESS")
-let prev = new MessageButton()
+.setStyle(ButtonStyle.Success)
+let prev = new ButtonBuilder()
   .setCustomId("prev")
   .setLabel("Previous")
-  .setStyle("PRIMARY")  
-let random = new MessageButton()
+  .setStyle(ButtonStyle.Primary)  
+let random = new ButtonBuilder()
   .setCustomId("random")
   .setLabel("Random Result")
-  .setStyle("SECONDARY")  
+  .setStyle(ButtonStyle.Secondary)  
 
 
 const google = new Scraper({
@@ -69,7 +67,7 @@ const google = new Scraper({
 
 module.exports = {
   data: new SlashCommandBuilder()
-	.setName('img')
+	.setName('image')
 	.setDescription('Send an image!')
   .addStringOption(option => option.setName('word').setDescription('Write a word').setRequired(true)),
 	async execute(message) {
@@ -123,7 +121,7 @@ const fetch_json = async (url) => {
 
 const costum_google_search = (message, json, search) => {
   var i = 0;
-  let row = new MessageActionRow().addComponents(next, random);
+  let row = new ActionRowBuilder().addComponents(next, random);
   var msg = message.channel.send({fetchReply: true, content: json.items[i].link, components: [row]})
     .then(async function(msg){
       const collector = msg.createMessageComponentCollector({
@@ -154,7 +152,7 @@ const costum_google_search = (message, json, search) => {
             break;
         }
 
-        row = new MessageActionRow();
+        row = new ActionRowBuilder();
         if(json.queries.hasOwnProperty('previousPage') || i > 0){
           row.addComponents(prev);
         }
@@ -181,7 +179,7 @@ const fallback_scraper = async (message, search, nr) => {
     message.channel.send({content: "Error! Search timed out :("})
     return
   }
-  let row = new MessageActionRow().addComponents(next,random);
+  let row = new ActionRowBuilder().addComponents(next,random);
   var i = 0;
   var msg = message.channel.send({fetchReply: true, content: results[i].url, components: [row]})
     .then(async function(msg){
@@ -203,7 +201,7 @@ const fallback_scraper = async (message, search, nr) => {
                   i = Math.floor(Math.random() * results.length);
                   break;
               }
-          row = new MessageActionRow();
+          row = new ActionRowBuilder();
           if(i == results.length){
               row.addComponents(prev);
           }else if(i == 0){

@@ -1,6 +1,5 @@
 
-const {MessageButton, MessageActionRow, MessageEmbed } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {ButtonBuilder, ActionRowBuilder, EmbedBuilder, SlashCommandBuilder, ButtonStyle } = require('discord.js');
 const index = require('../index.js');
 
 
@@ -12,6 +11,10 @@ module.exports = {
 	async execute(message) {
         await message.deferReply();
         let meme_storage = index.meme_storage;
+        if(meme_storage === undefined){
+            return message.editReply({content: 'Meme Storage is not initialized! Meme Command is not functional! :('})
+        }
+
         var subreddit = '', json;
 
         try{
@@ -40,20 +43,20 @@ module.exports = {
             json = filterJSON(message, json)
 
             //navigation buttons
-            let previous = new MessageButton()
+            let previous = new ButtonBuilder()
             .setCustomId("previous")
             .setLabel("Previous Meme")
-            .setStyle("PRIMARY")
-            let another = new MessageButton()
+            .setStyle(ButtonStyle.Primary)
+            let another = new ButtonBuilder()
             .setCustomId("another")
             .setLabel("Another Meme")
-            .setStyle("SUCCESS")
-            let switchSub = new MessageButton()
+            .setStyle(ButtonStyle.Success)
+            let switchSub = new ButtonBuilder()
             .setCustomId("switch")
             .setLabel("Switch Subreddit")
-            .setStyle("SECONDARY")
+            .setStyle(ButtonStyle.Secondary)
 
-            let row = new MessageActionRow();
+            let row = new ActionRowBuilder();
             row.addComponents(another);
             row.addComponents(switchSub);
             
@@ -84,7 +87,7 @@ module.exports = {
                         embed = buildEmbed(json, ++i)
                     }
 
-                    row = new MessageActionRow();
+                    row = new ActionRowBuilder();
                     if(i > 0){
                         row.addComponents(previous)
                     }
@@ -140,10 +143,10 @@ function randomizeMemes(array){
 
 function buildEmbed(json, i){
     var thememe = json.data.children[i].data;
-    let embed = new MessageEmbed()
+    let embed = new EmbedBuilder()
         .setTitle(thememe.title)
         .setURL(`https://reddit.com${thememe.permalink}`)
-        .setFooter(`👍 ${thememe.ups} 💬 ${thememe.num_comments} | Subreddit: r/ ${thememe.subreddit}`)
+        .setFooter({text: `👍 ${thememe.ups} 💬 ${thememe.num_comments} | Subreddit: r/ ${thememe.subreddit}`})
         .setImage(thememe.url)
 
     return embed;

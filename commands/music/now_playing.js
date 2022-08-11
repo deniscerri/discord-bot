@@ -1,6 +1,5 @@
 const index = require('../../index.js');
-const Discord = require("discord.js");
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {SlashCommandBuilder, EmbedBuilder} = require("discord.js");
 
 
 module.exports = {
@@ -16,7 +15,7 @@ module.exports = {
         let skipped = args === undefined ? false : args[1];
         if (server_queue) {
             let song = server_queue.songs[0];
-            let embed = new Discord.MessageEmbed()
+            let embed = new EmbedBuilder()
             embed.setTitle('Now Playing')
             if(song === undefined){
                 return;
@@ -94,7 +93,7 @@ const added_to_queue = (message, server_queue, type, position) => {
     let thumbnail = `https://img.youtube.com/vi/${videoID.get('v')}/mqdefault.jpg`;
 
     if (type == 'song') {
-        let embed = new Discord.MessageEmbed()
+        let embed = new EmbedBuilder()
             .setTitle('Added To Queue')
         embed.setThumbnail(thumbnail)
 
@@ -111,8 +110,11 @@ const added_to_queue = (message, server_queue, type, position) => {
         } catch (err) {
             playbackDuration = 0;
         }
-
-        est = server_queue.length_seconds - playbackDuration - song.length_seconds;
+        if(position == 1){
+            est = server_queue.songs[0].length_seconds - playbackDuration;
+        }else{
+            est = server_queue.length_seconds - playbackDuration - song.length_seconds;
+        }
         if (est < 3600) {
             est = new Date(est * 1000).toISOString().substring(14, 19)
         } else {
@@ -126,7 +128,7 @@ const added_to_queue = (message, server_queue, type, position) => {
         message.channel.send({ embeds: [embed] });
     }
     else if (type == 'playlist') {
-        let embed = new Discord.MessageEmbed()
+        let embed = new EmbedBuilder()
             .setTitle('Added Playlist To Queue')
             .setThumbnail(thumbnail)
             .setDescription(`[${song.playlist_title}](${song.playlist_url})\n\n`);

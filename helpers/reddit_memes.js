@@ -1,4 +1,3 @@
-const {MessageButton, MessageActionRow, MessageEmbed } = require('discord.js');
 const fetch = require('node-fetch');
 
 let reddit = [

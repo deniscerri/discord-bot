@@ -1,8 +1,7 @@
-const Discord = require("discord.js");
+const {SlashCommandBuilder, EmbedBuilder} = require("discord.js");
 const ytsc = require('yt-search');
 const player = require(`${__dirname}/play.js`);
 const index = require('../../index.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
 
 
 module.exports = {
@@ -19,6 +18,11 @@ module.exports = {
         const queue = index.queue;
 
         if(!voice_ch){ return message.reply({content: 'You need to be in a audio channel to execute this command!'});}
+        
+        if(!(message.guild.members.me.voice.channel == voice_ch) && message.guild.members.me.voice.channel){
+            return message.reply({content: 'You need to be in the same audio channel as the bot to play a song!'});
+        }
+        
         var server_queue = queue.get(message.guild.id);
 
         if(!server_queue){
@@ -36,7 +40,7 @@ module.exports = {
         const videos = await finder(args);
 
         if(videos){
-            let embed = new Discord.MessageEmbed()
+            let embed = new EmbedBuilder()
                 .setTitle('🔎 Search Results: [Write one of the numbers shown]')
 
             let limit = (videos.length > 10) ? 10 : videos.length;
@@ -61,7 +65,7 @@ module.exports = {
                 function msg (){
                     const collector = messg.channel.createMessageCollector({filter, max: 1, time: 30000});
                     collector.on('collect', message => {
-                        if(message == undefined){
+                        if(message === undefined){
                             return;
                         }
                         if(Number.isInteger(parseInt(message.content))){
@@ -92,7 +96,7 @@ module.exports = {
             })
             
         }else{
-            messg.channel.send({content: "Error finding video. "});
+            messg.channel.send({content: "Error finding results. "});
             return;
         }
     }

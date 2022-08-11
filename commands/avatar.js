@@ -1,6 +1,4 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
-const Discord = require("discord.js");
+const {EmbedBuilder, SlashCommandBuilder} = require("discord.js");
 const fetch =  require("axios");
 
 module.exports = {
@@ -42,7 +40,7 @@ module.exports = {
             image = user.displayAvatarURL({dynamic: true, size: 4096});
         }
         
-        const avatarEmbed = new Discord.MessageEmbed()
+        const avatarEmbed = new EmbedBuilder()
             .setTitle('URL')
             .setURL(image)
             .setImage(image);
