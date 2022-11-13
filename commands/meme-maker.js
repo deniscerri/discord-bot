@@ -23,7 +23,7 @@ module.exports = {
         let font;
         if(width <= 300){
             font = await jimp.loadFont(jimp.FONT_SANS_32_WHITE)
-        }else if(width <= 800){
+        }else if(width <= 1000){
             font = await jimp.loadFont(jimp.FONT_SANS_64_WHITE)
         }else{
             font = await jimp.loadFont(jimp.FONT_SANS_128_WHITE)
