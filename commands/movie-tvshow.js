@@ -176,9 +176,9 @@ function embed(media, type){
         .setDescription(media.overview)
 
     if(type == 'tv'){
-        embed.addFields([{name: 'Watch Here:', value: `https://fsapi.xyz/tv-tmdb/${media.id}-1-1`}]);
+        embed.addFields([{name: 'Watch Here:', value: `https://vidsrc.me/embed/${media.id}/1-1`}]);
     }else{
-        embed.addFields([{name: 'Watch Here:', value: `https://fsapi.xyz/tmdb-movie/${media.id}`, }]);
+        embed.addFields([{name: 'Watch Here:', value: `https://vidsrc.me/embed/${media.id}`, }]);
     }
 
     return embed;
