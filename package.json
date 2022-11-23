@@ -35,7 +35,7 @@
     "puppeteer-core": "^15.5.0",
     "spotifydl-core": "^0.2.0",
     "yt-search": "^2.10.2",
-    "ytdl-core": "^4.11.0",
+    "ytdl-core": "^4.11.2",
     "ytpl": "^2.2.3"
   }
 }
