@@ -18,6 +18,8 @@ Denis Discord Bot is a nice useful bot you can use on your discord server. It ha
   - [x] send what is hot recently if you don't provide a query
 - [x] send roasts
 - [x] send random topics to talk about
+- [x] truth or dare
+- [x] would you rather
 
 <br><br>
 
