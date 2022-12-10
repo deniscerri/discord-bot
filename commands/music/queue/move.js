@@ -43,7 +43,7 @@ module.exports = {
 
         if (!message.guild.members.me.voice.channel) return message.editReply({ content: 'I am not in a voice channel!' });
 
-        if (message.guild.me.voice.channel == voice_ch) {
+        if (message.guild.members.me.voice.channel == voice_ch) {
             if (!server_queue || server_queue.songs.length <= 1) { message.editReply({ content: 'The queue is empty!' }); return; }
             move(message, server_queue)
             return;
