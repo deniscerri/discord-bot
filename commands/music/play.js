@@ -1,4 +1,4 @@
-const ytdl = require('ytdl-core');
+const ytdl = require('ytdl-core-discord');
 const play = require('play-dl');
 const ytsc = require('yt-search');
 const ytpl = require('ytpl');
@@ -97,6 +97,21 @@ async function add_to_queue(message, queue, server_queue, songs, voice_ch){
                 guildId: message.guildId,
                 adapterCreator: message.guild.voiceAdapterCreator
             })
+
+            const networkStateChangeHandler = (oldNetworkState, newNetworkState) => {
+                const newUdp = Reflect.get(newNetworkState, 'udp');
+                clearInterval(newUdp?.keepAliveInterval);
+            }
+            
+            connection.on('stateChange', (oldState, newState) => {
+                const oldNetworking = Reflect.get(oldState, 'networking');
+                const newNetworking = Reflect.get(newState, 'networking');
+                
+                oldNetworking?.off('stateChange', networkStateChangeHandler);
+                newNetworking?.on('stateChange', networkStateChangeHandler);
+            });
+
+
             server_queue.connection = connection;
             server_queue.connection.subscribe(server_queue.audioPlayer);
             video_player(message,queue,message.guild, server_queue.songs[0])
